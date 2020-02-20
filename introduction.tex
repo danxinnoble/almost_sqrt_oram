@@ -1,3 +1,26 @@
 Private Information Retrieval (PIR) is a method by which
 a client can access an item in a database, without the server
 or servers who own the database know which item was accessed.
+
+There are two typical frameworks in which this is analyzed.
+The first is the multi-server (typically 2-server) model. 
+In this case, it is in fact possible to have
+a communication protocol that is information-thoeretically 
+secure, such as the work of Boyle et al. \cite{boyle2016function}, 
+which only requires $O(\log(n))$
+communication between the client and the servers.
+There 
+
+The second framework is in the single-server model.
+
+A related primitive is ORAM. This allows a client to outsource
+their memory to an untrusted server in such a way that their
+requests to the server leak nothing about their actual
+access patterns of the data (and, of course, leak nothing about
+the data). 
+
+Some subtleties should be observed about the differences
+between PIR and ORAM.
+PIR only allows read-access.
+ORAM only allows access to data that has already been written
+by the client.  
