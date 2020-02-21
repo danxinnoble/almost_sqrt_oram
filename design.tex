@@ -12,7 +12,7 @@ quite efficiently. They then return shares of the value
 that was looked up to the client, who reconstructs the value.
 Therefore, the communication and computation by the client are $O(1)$.
 If the data is initially stored in plaintext, it is necessary
-for the data to be ``input'' into the ORAM. This requires
+for the data to be inserted into the ORAM by the servers. This requires
 about $O(n \log(n))$ computation on behalf of the servers.
 
 This design provides more than PIR. 
@@ -31,7 +31,7 @@ inside of the MPC.
 Additionally, regular ORAM is restricted to a single user
 but in this scheme, multiple users could access and modify
 the same ORAM without needing to share any data between each other.
-Of course, if a client were 'malicious' and clients were allowed
+Of course, if a client were `malicious' and clients were allowed
 arbitrary access patterns, then the data and access patterns of
 one client could be entirely viewable by another client who
 frequently read the entire array.
