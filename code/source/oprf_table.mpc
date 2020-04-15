@@ -1,0 +1,26 @@
+# This is a function for an implementation of a PRF over a small
+#   and configurable field.
+
+# This implements the naive, but in some cases effective oblivious random function
+# It picks an actual random k-bit number for all 2^k possible values
+def oprf_table_init(k):
+  h = 1 << k
+  lookup_table = sint.Array(h)
+
+  @for_range(h)
+  def set_value(i):
+    lookup_table[i] = sint.get_random_int(5)
+
+  return lookup_table
+
+# Assumes 0 <= i < h, table of size h
+def oprf_table_eval(lookup_table, k, i):
+  h = 1 << k
+  val = sint.Array(1)
+  val[0] = sint(0)
+
+  @for_range(h)
+  def set_value(j):
+    val[0] = val[0] + (i==cint(j))*lookup_table[j]
+
+  return val[0]

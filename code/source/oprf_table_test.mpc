@@ -1,0 +1,21 @@
+execfile('/root/SCALE-MAMBA/Programs/oprf_table/oprf_table.mpc')
+execfile('/root/SCALE-MAMBA/Programs/test_util/test_util.mpc')
+
+testi = 0
+
+
+r = sint.get_random_int(10)
+
+# Test whether accessing the same elem twice yields the same result
+testi = new_test(testi)
+
+k = 5
+h = 1 << k
+
+oprf = oprf_table_init(k)
+
+i = sint(5)
+a = oprf_table_eval(oprf, k, i)
+b = oprf_table_eval(oprf, k, i)
+
+check(a.reveal(), b.reveal())
