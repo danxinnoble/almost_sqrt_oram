@@ -1,0 +1,241 @@
+\section{Efficient, simple, Square-Root ORAM}
+
+The original ORAM paper \cite{ostrovsky1997private} presented a protocol for performing
+oblivious-RAM with amortized cost $O(\sqrt{n} \log{n})$.
+
+In the secure-computation setting, a direct application of this
+protocol would require many evaluations of an oblivious PRF (OPRF).
+While in principle this is a constant-cost operation, in practice evaluating an OPRF is expensive. For instance, in the sem-honest, 2-party setting, the communication cost of oblivious versions of standard PRFs is around 170 Kb and around 20 Kb for MPC-optimized PRFs (\cite{hemenway2019private} Table 1) % This should be updated to reference the actual papers and use more recent results.
+
+A different approach to square-root ORAM was therefore explored by Zahur et al is to use a recursive solution to store a look-up table for the evaluations of the PRF.
+
+We adopt a different approach. We use OPRFs as in the original protocol.
+However we take advantage of a number of facts to make the OPRFs more efficient.
+Firstly, each PRF will only be evaluated on $\sqrt{n}$ elements.
+Therefore, the PRF does not need to be secure up to an arbitrary number of 
+evaluations. In deed, it can be rendered completely insecure if evaluated
+on $\sqrt(n) + 1$ points and still be secure for our purposes.
+Secondly the PRF is evaluated over a small input.
+Thirdly, if the PRF is, in fact, a permutation and 
+if the function is evaluated for \emph{every} point in the range,
+the distribution of the output (when sorted or shuffled again)
+does not leak any information about the function.
+We achieve this using Feistel's technique to transform a PRF into a PRP.
+
+\subsection{Feistel Cipher}
+
+The Feistel Cipher allows any PRF $F : [m] \rightarrow[m]$ to be transformed
+into a PRP $G : [m] \times [m] \rightarrow [m] \times [m]$. The technique is as follows.
+
+Let $i = (L, R)$, where $i \in [m] \times [m]$ and $L, R \in [m]$.
+Let $B_k(i) = (R, L + F_k(R))$.
+$B_k$ is clearly invertible and maps $[m] \times [m]$ to $[m] \times [m]$, so is a permutation.
+However, it is clearly not pseudo-random, since the last element of $i$ 
+completely reveals the first element of $B_k(i)$.
+Nevertheless, it turns out that if this process is repeated three times,
+using three independently chosen keys, the composition is pseudo-random,
+i.e. $G_{k_1, k_2, k_3} \defined B_{k_3} \circ B_{k_2} \circ B_{k_1}$ is a PRP
+\cite{luby1988construct}.
+
+
+\subsection{Polynomials as a (pseudo)-random function}
+
+
+Theorem:
+Let $F_m$ be a field. 
+Let $P$ be a $m$-degree polynomial in this field, 
+where each coefficient is chosen randomly in $F_m$.
+Then $P$ is a random function in this field.
+
+Proof:
+%% COMPLETE LATER. Potential ideas
+%% - Use the Fundamental Theorem of Algebra
+%% - Use the fact that the VanderMode matrix is invertible
+%% - Look at the original Shamir sharing paper and look at the proof there
+%% - Look at said paper but just cite the result.
+
+Since $P$ is a random function, it is also clearly a pseudo-random function.
+
+\subsection{Oblivious Sorting}
+
+Oblivious sorting is fundamental to many ORAM protocols and is often
+a bottle-neck in the secure computation.
+However, we can utilize the fact that every sort we do will be sorting
+based on an array that contains every possible element exactly once.
+Therefore, we can randomly permute the elements first,
+then reveal the field to be sorted on and then sort in the clear.
+
+The function takes at least two arguments. 
+The first, $A$, is an array of the indices to be sorted on.
+Their distribution (but not order) is public and there are no duplicates.
+The remaining arguments are arrays of the same length as the index array,
+which should be sorted according to the index array.
+The protocol is presented in Figure~\ref{fig:OblivSort}.
+
+
+\begin{figure}
+\begin{framed}
+
+$OblivSort_A(B, ...))$
+
+$(\hat{A}, \hat{B} ...) = shuffle(A, B, ...)$
+
+$\tilde{A} = reveal(\hat{A})$
+
+$(\bar{B}, ...) = Sort_{\tilde{A}}(\hat{B}, ...)$
+
+return $(\bar{B}, \ldots)$
+
+\caption{Oblivious Sorting Protocol. Requires public index distribution.}
+\label{fig:OblivSort}
+\end{framed}
+\end{figure}
+
+\subsection{Random Shuffle}
+
+There are many protocols for a random shuffle.
+We will use a Waksman permutation network.
+\footnote{Waksman permutation networks are very good for shuffling an array,
+however evaluating the permutation on a particular point cannot be done
+efficiently. Hence, we do not use Waksman networks to perform the ORAM permutation.}
+This is a $O(n \log{n})$-sized network of switches that allows computationation
+of an arbitrary permutation by setting the switch-bits appropriately.
+An important observation is that setting the switch-bits randomly
+does not result in a random permutation.
+Therefore, for the MPC setting where at most $t$ players are dishonest,
+$(t+1)$ players should each choose switch-bits and have a Waksman permutation
+evaluated on the array, in turn, using these switch bits.  
+In an arithmetic ciruit MPC framework, this can be done using $O( (t+1) n \log{n})$ 
+multiplications.
+
+
+\subsection{Construction}
+
+
+\begin{figure}
+\begin{framed}
+
+\# m is the size of the array
+
+$init(m, data\_orig)$
+
+let $n$ be the smallest value such that
+$n - \sqrt{n} > m$ and $n = p^{2k}$ for some prime $p$ and integer $k >=1$.
+
+for $i \in [n]$ do
+
+   if $i < m$ then
+
+   $data[i] = data\_orig[i]$
+
+   else
+
+   $data[i] = 0$
+
+   fi
+
+   $ind[i]  = (\lfloor{ \frac{i}{\sqrt{n}}} \rfloor ,  i \bmod \sqrt{n}) $
+
+done
+
+$count = 0$
+
+\end{framed}
+\end{figure}
+
+
+\begin{figure}
+\begin{framed}
+
+$ORAMShuffle(ind, data)$
+
+$(ind_0, data_0) = OblivSort_{ind}(ind, data)$
+
+$P_1, P_2, P_3 \leftarrow^r P$, where $P$ is the set of all $\sqrt{n}$-degree polynomials in $F_{\sqrt{n}}$. 
+
+for $k \in \{1, 2, 3\}$ do
+
+  for $j \in [\sqrt{n}]$ do
+
+    $B_k[j] = P_k(j)$
+
+  done
+    
+  for $i \in [\sqrt{n}]$ do
+
+    for $j \in [\sqrt{n}]$ do
+
+      $C_k[\sqrt{n} i + j] = (j, i + B_k[j])$
+
+    done
+
+   done
+
+  $B_k (L, R) = (R, L + P_k(R))$
+
+  $(ind_k, data_k) = OblivSort_{C_k}(ind_{k-1}, data_{k-1})$
+  
+done
+
+for $i \in [\sqrt{n}]$ do
+
+    $stash[i] = \bot$
+
+done
+
+
+$B = B_3 \circ B_2 \circ B_1$
+
+return $(B, ind_3, data_3)$	
+
+\caption{ORAMShuffle protocol} \label{fig:ORAMShuffle}
+\end{framed}
+\end{figure}
+
+
+\begin{figure}
+\begin{framed}
+
+$Read(i, data)$
+
+if $count = 0$ then
+
+    ORAMShuffle(ind, data)
+
+fi
+
+$(found, datum_0) = linearORAMRead(i, stash)$
+
+if $found = true$ then
+
+  $p = m + count$
+
+else
+
+  $p = B(i)$
+
+fi
+
+$datum_1 = data[p]$
+
+if $found = true$ then
+
+  $datum = datum_0$
+
+else
+
+  $datum = datum_1$
+
+fi
+
+% Technically just need to access one element
+$linearORAMWrite(i, stash, datum)$
+
+$count \leftarrow count + 1 \bmod \sqrt{n}$ 
+
+return datum
+
+\caption{Square Root ORAM access protocol} \label{fig:sqrtORAMAccess}
+\end{framed}
+\end{figure}
+
