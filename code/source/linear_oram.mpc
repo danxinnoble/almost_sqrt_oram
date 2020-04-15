@@ -1,0 +1,31 @@
+
+# p+1/2. 
+# However data is packed, DO NOT USED THIS AS A VALID DATA POINT
+NOT_FOUND = cint(1)/cint(2)
+
+# The size of each element of data_orig must be less than the field size
+def linear_oram_init(m, data_orig):
+  data = sint.Array(m)
+  for i in range(m):
+    data[i] = sint(data_orig[i])
+
+  return data
+
+
+def linear_oram_read(i, data, m):
+  datum = sint.Array(1)
+  datum[0] = sint(NOT_FOUND)
+  @for_range(m)
+  def range_loop(j):
+    datum[0] = datum[0] + (j == i)*(data[j] - datum[0])
+
+  return datum[0]
+  
+def linear_oram_write(i, val, data, m):
+  @for_range(m)
+  def range_loop(j):
+    data[j] = data[j] + (i == j)*(val - data[j])
+
+  return
+
+
