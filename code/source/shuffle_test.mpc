@@ -1,6 +1,8 @@
 execfile('/root/SCALE-MAMBA/Programs/shuffle/shuffle.mpc')
 execfile('/root/SCALE-MAMBA/Programs/test_util/test_util.mpc')
 
+N=SED_THIS_TO_NUMBER_OF_PLAYERS 
+
 testi=0
 
 if(False):
@@ -52,7 +54,7 @@ if(False):
 	print_ln("Complete")
 
 
-if(True):
+if(False):
 	
 	testi = new_test(testi)
 
@@ -79,7 +81,7 @@ if(True):
         print_ln("User input contains an error.")
         end_if()
 
-if(True):
+if(False):
 
 	testi = new_test(testi)
 
@@ -98,3 +100,24 @@ if(True):
         shuffle_player(elems, data, k, 1, allIsWell)
 
 	print_ln("Complete")
+
+
+if(True):
+
+    testi = new_test(testi)
+
+    k = 4
+    elems = sint.Array(1 << k)
+    data = sint.Array(1 << k)
+    @for_range(1 << k)
+    def set_elem(i):
+        elems[i] = sint(i)
+        data[i] = sint(i)
+
+    shuffle_securely(elems, data, k, N)
+
+    @for_range(1 << k)
+    def reveal_and_print(i):
+        print_ln("%s: %s", elems[i].reveal(), data[i].reveal())
+
+

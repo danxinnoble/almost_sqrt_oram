@@ -1,3 +1,4 @@
+WAKSMAN_SHUFFLE = cint(25)
 
 # This isn't quite a Waksman network. It includes the top-right element in every recursion. 
 # Assumes d>1, |elems| = 2^d, and that gates \in {0, 1}^{2^d * d - 2^(d-1)}, 
@@ -38,6 +39,35 @@ def shuffle_fixed(elems, d):
 # It seems that if statements cannot have empty else blocks. 
 def do_nothing():
   w = sint(0)
+
+
+# Have each person supply a Waksman permutation
+# elems, data : arrays of length 2^d
+# n : Number of players
+def shuffle_securely(elems, data, d, n):
+    m = 1 << d
+    allIsWell = cint.Array(1)
+
+    # Indicate that local IO should prepare to locally do a shuffle
+    cint.public_output(WAKSMAN_SHUFFLE)
+    cint.public_output(cint(d))
+
+    for i in range(n):
+        elems_new = sint.Array(m)
+        data_new = sint.Array(m)
+        @for_range(m)
+        def copy(j):
+            elems_new[j] = elems[j]
+            data_new[j] = data[j]
+
+        shuffle_player(elems_new, data_new, d, i, allIsWell)
+
+        @for_range(m)
+        def copy_back(j):
+            elems[j] = elems[j] + allIsWell[0]*(elems_new[j]-elems[j])
+            data[j] = data[j] + allIsWell[0]*(data_new[j]-data[j])
+        print_ln("Player %s provided good input? %s", i, allIsWell[0])
+
 
 # Allows a player to input the bits of the switches.
 def shuffle_player(elems, data, d, l, allIsWell):
