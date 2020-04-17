@@ -1,0 +1,48 @@
+
+\section{Security}
+
+\begin{lemma}
+oblivSort leaks no information whenever the index, $A$, being sorted on
+has a public distribution.
+\end{lemma}
+
+\begin{proof}
+First, the array $A$ is shuffled obliviously.
+($B$ is also shuffled obliviously using the same permutation.)
+Since this operation is done within a secure computation,
+nothing is leaked by performing this computation.
+Furthermore, after this computation, $\hat{A}$ contains
+no sensitive information.
+The original order of the elements has been entirely masked by a
+random permutation and the contents were already known.
+Therefore revealing $\hat{A}$ leaks no information.
+Finally, the sorting leaks no information because it is performed
+based on data that has already been revealed (namely $\tilde{A}$).
+\end{proof}
+
+\begin{theorem}
+SqrtORAM.shuffle does not leak any information
+\end{theorem}
+
+\begin{proof}
+We have that OblivSort leaks no information if the indexes sorted on
+follow a public distribution. In the case of the first call
+to OblivSort on line \ref{line:first_sort}, this is true
+the array $ind$ contains exactly one occurrence of $(x, y)$ 
+for all $x, y \in [\sqrt{n}]$.
+
+The evaluation of the prf on line \ref{line:prf_eval} is performed
+within the secure computation with the output being a secret value.
+Therefore nothing is learned about the input in this step.
+
+Viewed as a function $C_k(i)$ is invertible and, since the domain and range
+are equal, $C_k(i)$ is a permutation. 
+Since it has every possible input, it also has every possible output.
+Therefore the distribution of $C_k(i)$ is public (though its order is secret.)
+Therefore, when OblivSort is evaluated on line \ref{line:second_sort} 
+it leaks nothing.
+
+Lastly initialization of a new stash (using a public parameter) leaks nothing.
+
+Therefore, the function SqrtORAM.shuffle leaks no information.
+\end{proof}

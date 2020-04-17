@@ -38,23 +38,48 @@ i.e. $G_{k_1, k_2, k_3} \defined B_{k_3} \circ B_{k_2} \circ B_{k_1}$ is a PRP
 \cite{luby1988construct}.
 
 
-\subsection{Polynomials as a (pseudo)-random function}
+\subsection{Oblivious Pseudo-random function}
 
+Any OPRF $F : [\sqrt{n}] \rightarrow [\sqrt{n}]$ can be used to 
+construct an OPRP $G : [n] \rightarrow [n]$.
+For our purposes, it is sufficient to use the simplest possible
+OPRF, namely a look-up table on random values.
+While this costs $\sqrt{n}$ secure-comparisons and 
+$\sqrt{n}$ muxes per OPRF evaluation,
+each ORAM read will only require $3$ such evaluations,
+and each ORAM shuffle will only require $3 \sqrt{n}$ such evaluations.
+This therefore does not affect the asymptotic performance
+of the protocol, and the constants are small.
 
-Theorem:
-Let $F_m$ be a field. 
-Let $P$ be a $m$-degree polynomial in this field, 
-where each coefficient is chosen randomly in $F_m$.
-Then $P$ is a random function in this field.
+Of course, other OPRFs may be more efficient and since the design
+is modular they can easily be substituted in.
 
-Proof:
-%% COMPLETE LATER. Potential ideas
-%% - Use the Fundamental Theorem of Algebra
-%% - Use the fact that the VanderMode matrix is invertible
-%% - Look at the original Shamir sharing paper and look at the proof there
-%% - Look at said paper but just cite the result.
+\begin{algorithm}
+\caption{OPRF}
+\label{alg:oprf}
+\begin{algorithmic}[1]
 
-Since $P$ is a random function, it is also clearly a pseudo-random function.
+\Procedure{OPRF.init}{size} \Comment{For ORAM, $size = \sqrt{n}$}
+\For{$i \gets 1$  to $size$} 
+    \State $table[i] \gets^r [size]$
+\EndFor
+\State \textbf{return} self
+\EndProcedure
+
+\State
+
+\Procedure{OPRF.eval}{x}
+\State $res \gets 0$
+\For{$i \gets 1$ to $size$}
+    \State obliv\_if $i = x$ then
+    \State $res \gets table[i]$
+    \State fi
+\EndFor
+\State \textbf{return} res
+\EndProcedure
+
+\end{algorithmic}
+\end{algorithm}
 
 \subsection{Oblivious Sorting}
 
@@ -73,23 +98,20 @@ which should be sorted according to the index array.
 The protocol is presented in Figure~\ref{fig:OblivSort}.
 
 
-\begin{figure}
-\begin{framed}
-
-$OblivSort_A(B, ...))$
-
-$(\hat{A}, \hat{B} ...) = shuffle(A, B, ...)$
-
-$\tilde{A} = reveal(\hat{A})$
-
-$(\bar{B}, ...) = Sort_{\tilde{A}}(\hat{B}, ...)$
-
-return $(\bar{B}, \ldots)$
-
-\caption{Oblivious Sorting Protocol. Requires public index distribution.}
+\begin{algorithm}
+\caption{oblivSort: Sort based on indexes with a public distribution}
 \label{fig:OblivSort}
-\end{framed}
-\end{figure}
+\begin{algorithmic}[0]
+
+\Procedure{oblivSort}{A, B}
+\State $(\hat{A} , \hat{B}) = shuffle(A, B)$
+\State $\tilde{A} = reveal(\hat{A})$
+\State $\bar{B} = sort(\tilde{A}, \hat{B})$
+\State \textbf{return} $\bar{B}$
+\EndProcedure
+
+\end{algorithmic}
+\end{algorithm}
 
 \subsection{Random Shuffle}
 
@@ -105,137 +127,182 @@ does not result in a random permutation.
 Therefore, for the MPC setting where at most $t$ players are dishonest,
 $(t+1)$ players should each choose switch-bits and have a Waksman permutation
 evaluated on the array, in turn, using these switch bits.  
-In an arithmetic ciruit MPC framework, this can be done using $O( (t+1) n \log{n})$ 
-multiplications.
+In an arithmetic ciruit MPC framework, this can be done using $O( (t+1) n \log{n})$ multiplications.
 
 
 \subsection{Construction}
 
+\begin{algorithm}
+\caption{OblivSet}
+\label{alg:obliv_set}
+\begin{algorithmic}[1]
 
-\begin{figure}
-\begin{framed}
+\Procedure{OblivSet.init}{$max\_size$}  
 
-\# m is the size of the array
+\State $stash \gets [ \bot $ for $0 \leq i < max\_size]$
+\State $nElem \gets 0$
+\State \textbf{return} self
+\EndProcedure
 
-$init(m, data\_orig)$
+\State
 
-let $n$ be the smallest value such that
-$n - \sqrt{n} > m$ and $n = p^{2k}$ for some prime $p$ and integer $k >=1$.
+\Procedure{OblivSet.add}{$(\secret{x}, \secret{y})$} 
+\Comment{Assumes fewer than $max\_size$ elements have already been added}
+\State $stash[nElem + 1] \gets (\secret{x}, \secret{y})$
+\State $nElem \gets nElem + 1$
+\EndProcedure
 
-for $i \in [n]$ do
+\State
 
-   if $i < m$ then
+\Procedure{OblivSet.empty}{}
+\State $stash \gets [ \bot $ for $0 \leq i < nElem]$
+\State $nElem \gets 0$
+\EndProcedure
 
-   $data[i] = data\_orig[i]$
+\State
 
-   else
+\Procedure{OblivSet.get}{$\secret{key}$}
+\State $\secret{res} \gets \bot$
+\For{$j \gets 1$ to $nElem$}
+    \State $(\secret{x}, \secret{y}) \gets stash[j]$
+    \State obliv\_if $\secret{key} = \secret{x}$ then
+        \State $\secret{res} \gets \secret{y}$
+    \State fi
+\EndFor
+\State \textbf{return} res
+\EndProcedure
 
-   $data[i] = 0$
-
-   fi
-
-   $ind[i]  = (\lfloor{ \frac{i}{\sqrt{n}}} \rfloor ,  i \bmod \sqrt{n}) $
-
-done
-
-$count = 0$
-
-\end{framed}
-\end{figure}
+\end{algorithmic}
+\end{algorithm}
 
 
-\begin{figure}
-\begin{framed}
+\begin{algorithm}
+\caption{SqrtORAM}
+\label{alg:oram}
+\begin{algorithmic}[1]
 
-$ORAMShuffle(ind, data)$
+\Procedure{SqrtOram.init}{m, data\_orig}
+\Comment{$m$ is the size of the array}
 
-$(ind_0, data_0) = OblivSort_{ind}(ind, data)$
+\State $n \gets$ smallest $n= p^{2k}$, such that $n - \sqrt{n} > m$, $p$ is prime and $k \in \mathbb{N}$.
 
-$P_1, P_2, P_3 \leftarrow^r P$, where $P$ is the set of all $\sqrt{n}$-degree polynomials in $F_{\sqrt{n}}$. 
+\For{ $i \gets 1$ to $m$}
+   \State $data[i] = data\_orig[i]$
+\EndFor
 
-for $k \in \{1, 2, 3\}$ do
+\For{ $i \gets m+1$ to $n$}
+   \State $data[i] = \bot$
+\EndFor
+   
+\For{ $i \gets 1$ to $n$}
+    \State $ind[i]  = (\lfloor{ \frac{i}{\sqrt{n}}} \rfloor ,  i \bmod \sqrt{n}) $
+\EndFor
 
-  for $j \in [\sqrt{n}]$ do
+\State $count = 0$
+\State \textbf{return} self
+\EndProcedure
 
-    $B_k[j] = P_k(j)$
+\State
 
-  done
-    
-  for $i \in [\sqrt{n}]$ do
+\Procedure{SqrtOram.shuffle}{}
 
-    for $j \in [\sqrt{n}]$ do
+\State $(ind_0, data_0) = OblivSort(ind, (ind, data))$ \label{line:first_sort}
 
-      $C_k[\sqrt{n} i + j] = (j, i + B_k[j])$
+\For{ $k \gets 1, 2, 3$}
+    \State $P_i = PRF.init()$ 
 
-    done
+    \For{ $j \gets 1$ to $\sqrt{n}$}
+        \State $B_k[j] = P_k.eval(j)$ \label{line:prf_eval}
+        \For{$i \gets 1$ to $\sqrt{n}$}
+            \State $C_k[\sqrt{n} i + j] = (j, i + B_k[j] \bmod \sqrt{n})$
+        \EndFor
+    \EndFor
+ 
+    \State $(ind_k, data_k) = OblivSort(C_k, (ind_{k-1}, data_{k-1}))$
+        \label{line:second_sort}
+  
+\EndFor
 
-   done
+\State $stash \gets OblivSet.init(\sqrt{n})$
 
+% NEED TO CREATE A OPRP OBJECT
   $B_k (L, R) = (R, L + P_k(R))$
 
-  $(ind_k, data_k) = OblivSort_{C_k}(ind_{k-1}, data_{k-1})$
-  
-done
+\State \textbf{return} self
 
-for $i \in [\sqrt{n}]$ do
+\EndProcedure
 
-    $stash[i] = \bot$
+\State
 
-done
+\algstore{myalg}
+
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+\algrestore{myalg}
+
+\Procedure{SqrtOram.Access}{i}
+
+\If{$count = 0$}
+    \State this.shuffle()
+\EndIf
+
+\State $res \gets stash.get(i)$
+
+\If{ $res \neq \bot$}
+    \State $p \gets oprp.eval(m + count)$
+\Else
+    \State $p \gets oprp.eval(i)$
+\EndIf
+
+\State $datum \gets data[p]$
+\State $stash.add((i, datum))$
+
+\If{ $res \neq \bot$ }
+    \State $res \gets res$
+\Else
+    \State $res \gets datum$
+\EndIf
+
+\State $count \gets count + 1 \bmod \sqrt{n}$ 
+
+\State \textbf{return} res
+\EndProcedure
+
+\end{algorithmic}
+\end{algorithm}
 
 
-$B = B_3 \circ B_2 \circ B_1$
+The construction follows the original square-root ORAM construction
+\cite{ostrovsky1997private} in general. 
+However it has a much more efficient shuffling step.
 
-return $(B, ind_3, data_3)$	
+The original ORAM construction stores each item element $i$
+in a secret location, $OPRF_k(i)$, in a table where
+the key, $k$, for the PRF is secret and the PRF is evaluated obliviously.
+In order to avoid leakage from accessing the same element twice,
+accessed elements are stored in a stash. 
+In each access, the item is first searched for in the stash.
+If it found there, then a dummy item is accessed in the table.
 
-\caption{ORAMShuffle protocol} \label{fig:ORAMShuffle}
-\end{framed}
-\end{figure}
+In order to efficiently reshuffle the table, we use a Feistel-constructed
+PRP as the PRF.
 
+The critical observation if, $B_k : [n] \rightarrow [n]$ is a permutation, 
+then the set $\{B_k(j) \}_{j=1 \ldots n} = \{j = 1 \ldots n\}$.
+Therefore, revealing the contents (though not the order) of
+$\{B_k(j)\}_{j=1 \ldots n}$ reveals nothing.
 
-\begin{figure}
-\begin{framed}
+We use this fact in the OblivSort function in Algorithm \ref{fig:OblivSort}.
+The data is first shuffled using several Waksman permutation networks
+(one from each player).
+Then the evaluations of $B_k$ are revealed and sorting is performed in the clear
+(carrying the corresponding payloads).
 
-$Read(i, data)$
-
-if $count = 0$ then
-
-    ORAMShuffle(ind, data)
-
-fi
-
-$(found, datum_0) = linearORAMRead(i, stash)$
-
-if $found = true$ then
-
-  $p = m + count$
-
-else
-
-  $p = B(i)$
-
-fi
-
-$datum_1 = data[p]$
-
-if $found = true$ then
-
-  $datum = datum_0$
-
-else
-
-  $datum = datum_1$
-
-fi
-
-% Technically just need to access one element
-$linearORAMWrite(i, stash, datum)$
-
-$count \leftarrow count + 1 \bmod \sqrt{n}$ 
-
-return datum
-
-\caption{Square Root ORAM access protocol} \label{fig:sqrtORAMAccess}
-\end{framed}
-\end{figure}
-
+To perform the psuedo-random permutation on every element, 
+each of the three permutations, $B_1$, $B_2$ and $B_3$ are applied in turn.
+The payload is always kept secret. 
+To apply $B_k$, the corresponding OPRF, $P_k$ is applied to every possible string
+in $[\sqrt{n}]$. 
