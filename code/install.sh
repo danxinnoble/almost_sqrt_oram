@@ -56,6 +56,7 @@ do
   cp /root/source/$EX.mpc Programs/$EX/
   # If $EX does local computation, copy script for this. If not don't complain.
   cp /root/source/${EX}_local.py Programs/${EX}/local.py  2> /dev/null
+  cp /root/source/${EX}_lib.py Programs/${EX}/${EX}_lib.py 2> /dev/null
 done 
 
 # add simple syntax highlighting
