@@ -1,0 +1,204 @@
+
+\section{Primitives}
+
+In this section we describe a number of existing primitives which are
+used in our ORAM construction.
+
+\subsection{Oblivious Pseudo-random function}
+
+A Pseudo-Random Function (PRF) is a keyed function such that
+any party possessing the key may easily compute the function,
+but such that the output of the function will appear random 
+to any party who does not possess the key.
+An Oblivious PRF is one in which this computation is performed
+as a secure multiparty computation.
+Specifically, we require a protocol in which the key, input
+and output are all secret-shared among a number of parties.
+
+For this application it is in fact sufficient to use the simplest possible
+OPRF, namely a look-up table on random values.
+While this costs $\sqrt{n}$ secure-comparisons and 
+$\sqrt{n}$ muxes per OPRF evaluation,
+each ORAM access will only require $3$ such evaluations,
+and each ORAM shuffle will only require $3 \sqrt{n}$ such evaluations.
+This therefore does not affect the asymptotic performance
+of the protocol, and the constants are small.
+
+Of course, other OPRFs may be more efficient and since the design
+is modular they can easily be substituted in.
+
+\begin{algorithm}
+\caption{OPRF}
+\label{alg:oprf}
+\begin{algorithmic}[1]
+
+\Procedure{OPRF.init}{size} \Comment{For ORAM, $size = \sqrt{n}$}
+\For{$i \gets 1$  to $size$} 
+    \State $table[i] \gets^r [size]$
+\EndFor
+\State \textbf{return} self
+\EndProcedure
+
+\State
+
+\Procedure{OPRF.eval}{x}
+\State $res \gets 0$
+\For{$i \gets 1$ to $size$}
+    \OblivIf{$i = x$}
+    \State $res \gets table[i]$
+    \EndOblivIf
+\EndFor
+\State \textbf{return} res
+\EndProcedure
+
+\end{algorithmic}
+\end{algorithm}
+
+
+\subsection{Feistel Cipher}
+
+The Feistel Cipher allows any PRF $F : [m] \rightarrow[m]$ to be transformed
+into a PRP $G : [m] \times [m] \rightarrow [m] \times [m]$. The technique is as follows.
+
+Let $i = (L, R)$, where $i \in [m] \times [m]$ and $L, R \in [m]$.
+Let $B_k(i) = (R, L + F_k(R))$.
+$B_k$ is clearly invertible and maps $[m] \times [m]$ to $[m] \times [m]$, 
+so is a permutation.
+However, it is clearly not pseudo-random, since the last element of $i$ 
+completely reveals the first element of $B_k(i)$.
+Nevertheless, it turns out that if this process is repeated three times,
+using three independently chosen keys, the composition is pseudo-random,
+i.e. $G_{k_1, k_2, k_3} \defined B_{k_3} \circ B_{k_2} \circ B_{k_1}$ is a PRP
+\cite{luby1988construct}.
+
+This is described as an algorithm in the following figure,
+where the PRF is treated in a black-box manner.
+
+\begin{algorithm}
+\caption{OPRP}
+\label{alg:oprp}
+\begin{algorithmic}[1]
+
+\Procedure{OPRP.init}{n, $F_1$, $F_2$, $F_3$}
+\State \textbf{return} self   \Comment{Remember initialization variables}
+\EndProcedure
+
+\Procedure{OPRP.eval}{x}
+\State $L_0 \gets x \bmod \sqrt{n}$
+\State $R_0 \gets \lfloor \frac{x}{\sqrt{n}} \rfloor$
+
+\For{$i \gets 1$ to $3$}
+\State $L_i \gets R_{i-1}$
+\State $R_i \gets L_{i-1} + F_{i}.eval(R_{i-1}) \bmod \sqrt{n}$
+\EndFor
+
+\State $res \gets L_3\sqrt{n} + R_3$
+\State \textbf{return} $res$
+\EndProcedure
+
+\end{algorithmic}
+\end{algorithm}
+\subsection{Oblivious Sorting}
+
+Oblivious sorting is fundamental to many ORAM protocols and is often
+a bottle-neck in the secure computation.
+However, we can utilize the fact that every sort we do will be sorting
+based on an array that contains every possible element exactly once.
+Therefore, we can randomly permute the elements first,
+then reveal the field to be sorted on and then sort in the clear.
+
+The function takes at least two arguments. 
+The first, $A$, is an array of the indices to be sorted on.
+Their distribution (but not order) is public and there are no duplicates.
+The remaining arguments are arrays of the same length as the index array,
+which should be sorted according to the index array.
+The protocol is presented in Figure~\ref{fig:OblivSort}.
+
+
+\begin{algorithm}
+\caption{oblivSort: Sort based on indexes with a public distribution}
+\label{fig:OblivSort}
+\begin{algorithmic}[0]
+
+\Procedure{oblivSort}{A, B}
+\State $(\hat{A} , \hat{B}) = shuffle(A, B)$
+\State $\tilde{A} = reveal(\hat{A})$
+\State $\bar{B} = sort(\tilde{A}, \hat{B})$
+\State \textbf{return} $\bar{B}$
+\EndProcedure
+
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Random Shuffle}
+
+There are many protocols for a random shuffle.
+We will use a Waksman permutation network.
+\footnote{Waksman permutation networks are very good for shuffling an array,
+however evaluating the permutation on a particular point cannot be done
+efficiently. Hence, we do not use Waksman networks to perform the ORAM permutation.}
+This is a $O(n \log{n})$-sized network of switches that allows computationation
+of an arbitrary permutation by setting the switch-bits appropriately.
+An important observation is that setting the switch-bits randomly
+does not result in a random permutation.
+Therefore, for the MPC setting where at most $t$ players are dishonest,
+$(t+1)$ players should each choose switch-bits and have a Waksman permutation
+evaluated on the array, in turn, using these switch bits.  
+In an arithmetic ciruit MPC framework, this can be done using $O( (t+1) n \log{n})$ multiplications.
+
+\subsection{Linear ORAM}
+
+This is the trivial ORAM solution, in which the element is searched for
+in every location.
+This is used for inserting elements into the stash and finding
+elements that were inserted.
+Of course, a more efficient ORAM could be used to implement the stash,
+for instance the square-root ORAM could be used recursively.
+
+For the stash application, this may be slightly optimized compared to the 
+general case since the type of access (read vs write) can be public.
+
+\begin{algorithm}
+\caption{LinearORAM}
+\label{alg:obliv_set}
+\begin{algorithmic}[1]
+
+\Procedure{LinearORAM.init}{$max\_size$}  
+
+\State $stash \gets [ \bot $ for $0 \leq i < max\_size]$
+\State $nElem \gets 0$
+\State \textbf{return} self
+\EndProcedure
+
+\State
+
+\Procedure{LinearORAM.add}{$(\secret{x}, \secret{y})$} 
+\Comment{Assumes fewer than $max\_size$ elements have already been added}
+\State $stash[nElem + 1] \gets (\secret{x}, \secret{y})$
+\State $nElem \gets nElem + 1$
+\EndProcedure
+
+\State
+
+\Procedure{LinearORAM.empty}{}
+\State $stash \gets [ \bot $ for $0 \leq i < nElem]$
+\State $nElem \gets 0$
+\EndProcedure
+
+\State
+
+\Procedure{LinearORAM.get}{$\secret{key}$}
+\State $\secret{res} \gets \bot$
+\For{$j \gets 1$ to $nElem$}
+    \State $(\secret{x}, \secret{y}) \gets stash[j]$
+    \OblivIf{$\secret{key} = \secret{x}$}
+        \State $\secret{res} \gets \secret{y}$
+    \EndOblivIf
+\EndFor
+\State \textbf{return} res
+\EndProcedure
+
+\end{algorithmic}
+\end{algorithm}
+
+

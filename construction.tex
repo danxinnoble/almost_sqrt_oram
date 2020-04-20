@@ -1,0 +1,145 @@
+
+\section{Construction}
+
+We now describe our construction of an oblivious RAM that uses PRFs
+but has a much smaller cost during the shuffle step.
+
+\begin{algorithm}
+\caption{SqrtORAM}
+\label{alg:oram}
+\begin{algorithmic}[1]
+
+\Procedure{SqrtOram.init}{m, data\_orig}
+\Comment{$m$ is the size of the array}
+
+\State $n \gets$ smallest $n= p^{2k}$, such that $n - \sqrt{n} > m$, $p$ is prime and $k \in \mathbb{N}$.
+
+\For{ $i \gets 1$ to $m$}
+   \State $data[i] = data\_orig[i]$
+\EndFor
+
+\For{ $i \gets m+1$ to $n$}
+   \State $data[i] = \bot$
+\EndFor
+   
+\For{ $i \gets 1$ to $n$}
+    \State $ind[i]  = (\lfloor{ \frac{i}{\sqrt{n}}} \rfloor ,  i \bmod \sqrt{n}) $
+\EndFor
+
+\State $count = 0$
+\State \textbf{return} self
+\EndProcedure
+
+\State
+
+\Procedure{SqrtOram.shuffle}{}
+
+\State $(ind_0, data_0) = OblivSort(ind, (ind, data))$ \label{line:first_sort}
+
+\For{ $k \gets 1, 2, 3$}
+    \State $P_i = PRF.init()$ 
+
+    \For{ $j \gets 1$ to $\sqrt{n}$}
+        \State $B_k[j] = P_k.eval(j)$ \label{line:prf_eval}
+        \For{$i \gets 1$ to $\sqrt{n}$}
+            \State $C_k[\sqrt{n} i + j] = (j, i + B_k[j] \bmod \sqrt{n})$
+        \EndFor
+    \EndFor
+ 
+    \State $(ind_k, data_k) = OblivSort(C_k, (ind_{k-1}, data_{k-1}))$
+        \label{line:second_sort}
+  
+\EndFor
+
+\State $stash \gets LinearORAM.init(\sqrt{n})$
+
+\State $oprp \gets OPRP.init(n, P_1, P_2, P_3)$
+
+\State \textbf{return} self
+
+\EndProcedure
+
+\State
+
+\algstore{myalg}
+
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\begin{algorithmic}[1]
+\algrestore{myalg}
+
+\Procedure{SqrtOram.Access}{i}
+
+\If{$count = 0$}
+    \State this.shuffle()
+\EndIf
+
+\State $res \gets stash.get(i)$
+
+\If{ $res \neq \bot$}
+    \State $p \gets oprp.eval(m + count)$
+\Else
+    \State $p \gets oprp.eval(i)$
+\EndIf
+
+\State $datum \gets data[p]$
+\State $stash.add((i, datum))$
+
+\If{ $res \neq \bot$ }
+    \State $res \gets res$
+\Else
+    \State $res \gets datum$
+\EndIf
+
+\State $count \gets count + 1 \bmod \sqrt{n}$ 
+
+\State \textbf{return} res
+\EndProcedure
+
+\end{algorithmic}
+\end{algorithm}
+
+
+The construction follows the original square-root ORAM construction
+\cite{ostrovsky1997private} in general. 
+However it has a much more efficient shuffling step.
+
+The original ORAM construction stores each item element $i$
+in a secret location, $OPRF_k(i)$, in a table where
+the key, $k$, for the PRF is secret and the PRF is evaluated obliviously.
+In order to avoid leakage from accessing the same element twice,
+accessed elements are stored in a stash. 
+In each access, the item is first searched for in the stash.
+If it found there, then a dummy item is accessed in the table.
+
+In order to efficiently reshuffle the table, we use a Feistel-constructed
+PRP as the PRF.
+
+The critical observation is that if $B_k : [n] \rightarrow [n]$ is a permutation, 
+then the set $\{B_k(j) \}_{j=1 \ldots n} = \{1 \ldots n\}$.
+Therefore, revealing the contents (though not the order) of
+$\{B_k(j)\}_{j=1 \ldots n}$ reveals nothing.
+
+We use this fact in the OblivSort function in Algorithm \ref{fig:OblivSort}.
+The data is first shuffled using several Waksman permutation networks
+(one from each player).
+Then the evaluations of $B_k$ are revealed and sorting is performed in the clear
+(carrying the corresponding payloads).
+
+To perform the psuedo-random permutation on every element, 
+each of the three permutations, $B_1$, $B_2$ and $B_3$ are applied in turn.
+The payload is always kept secret, 
+but in each iteration the indexes are revealed (in a random order).
+To apply $B_k$, the corresponding OPRF, $P_k$ is applied to every possible string
+in $[\sqrt{n}]$. 
+Then $(L_k, R_k) = (R_{k-1}, L_{k-1} + P_k(R_{k-1}) \bmod \sqrt{n})$ can 
+be evaluated for every $(L_{k-1}, R_{k-1}) \in [\sqrt{n}] \times [\sqrt{n}]$.
+Observe that the OPRF $P_k$ need only be evaluated on each value of
+$R_{k-1}$ once, so need only be evaluated $\sqrt{n}$ times.
+Therefore to perform the 3 permutations, a total of $3 \sqrt{n}$ OPRF
+evaluations are needed.
+
+
+
