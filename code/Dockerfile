@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
   patch \
   python \
   python3 \
+  python3-numpy \
   tmux \
   unzip \
   vim \
