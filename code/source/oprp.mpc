@@ -19,7 +19,7 @@ def oprp_eval(halfD, r, F, x):
 
   for i in range(r):
     L[i+1] = R[i]
-    Fi = F[i]    # Am I allowed to do this??
+    Fi = F[i]    
     eval = oprf_table_eval(Fi, halfD, R[i])
     R[i+1] = (L[i] + eval) % (1 << halfD)
 

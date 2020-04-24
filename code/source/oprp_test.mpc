@@ -1,23 +1,59 @@
 execfile('/root/SCALE-MAMBA/Programs/oprf_table/oprf_table.mpc')
 execfile('/root/SCALE-MAMBA/Programs/oprp/oprp.mpc')
+execfile('/root/SCALE-MAMBA/Programs/test_util/test_util.mpc')
+execfile('/root/SCALE-MAMBA/Programs/sort/sort.mpc')
 
+testi = 0
 
-r = 3
-halfD = 3
+# A basic test of functionality
+if(False):
+    testi = new_test(testi)
 
-F0 = oprf_table_init(halfD)
-F1 = oprf_table_init(halfD)
-F2 = oprf_table_init(halfD)
+    r = 3
+    halfD = 3
 
-F = [F0, F1, F2]
+    F0 = oprf_table_init(halfD)
+    F1 = oprf_table_init(halfD)
+    F2 = oprf_table_init(halfD)
+    
+    F = [F0, F1, F2]
+    
+    x = sint(5)
+    
+    y = oprp_eval(halfD, r, F, x)
+    
+    print_ln("y = %s", y.reveal())
+    
+    
+    for i in range(r):
+      for j in range(1 << halfD):
+        print_ln("F_%s[%s] = %s", i, j, F[i][j].reveal())
+    
+# Check it's really a permutation
+if(True):
+    testi = new_test(testi)
 
-x = sint(5)
+    r = 3
+    halfD = 2
+    n = 1 << (2*halfD)
 
-y = oprp_eval(halfD, r, F, x)
+    F0 = oprf_table_init(halfD)
+    F1 = oprf_table_init(halfD)
+    F2 = oprf_table_init(halfD)
+    
+    F = [F0, F1, F2]
 
-print_ln("y = %s", y.reveal())
+    evals = sint.Array(n)
+    for i in range(n):
+        evals[i] = oprp_eval(halfD, r, F, i)
 
+    data = sint.Array(n)
+    for i in range(n):
+       data[i] = sint(i)
 
-for i in range(r):
-  for j in range(1 << halfD):
-    print_ln("F_%s[%s] = %s", i, j, F[i][j].reveal())
+    bitonic_merge(evals, data, 0, n)
+
+    for i in range(n):
+        print_ln("%s = %s", i, evals[i].reveal())
+
+    
