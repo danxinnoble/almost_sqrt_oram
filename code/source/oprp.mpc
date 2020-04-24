@@ -1,0 +1,28 @@
+execfile('/root/SCALE-MAMBA/Programs/oprf_table/oprf_table.mpc')
+
+# halfD: half of d, where d is the bit length of input
+#     n = 2^d, \sqrt{n} = 2^halfD 
+# r: number of rounds of the Feistel network
+#     This will be a constant baked-in higher up in the program
+# F: The OPRF keys. Here this is a Matrix of size r*sqrt{n}
+#     Each key is a lookup-table for a truly random function
+# x: The index being evaluated
+def oprp_eval(halfD, r, F, x):
+  d = 2*halfD
+  n = 1 << d
+  sqrtN = 1 << halfD
+  # L[i] and R[i] are each half-D bits long
+  L = sint.Array(r + 1)
+  R = sint.Array(r + 1)
+  L[0] = x >> halfD
+  R[0] = x % (1 << halfD)
+
+  for i in range(r):
+    L[i+1] = R[i]
+    Fi = F[i]    # Am I allowed to do this??
+    eval = oprf_table_eval(Fi, halfD, R[i])
+    R[i+1] = (L[i] + eval) % (1 << halfD)
+
+  res = (L[r]* sqrtN) + R[r]
+  return res
+ 

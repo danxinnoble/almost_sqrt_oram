@@ -1,0 +1,23 @@
+execfile('/root/SCALE-MAMBA/Programs/oprf_table/oprf_table.mpc')
+execfile('/root/SCALE-MAMBA/Programs/oprp/oprp.mpc')
+
+
+r = 3
+halfD = 3
+
+F0 = oprf_table_init(halfD)
+F1 = oprf_table_init(halfD)
+F2 = oprf_table_init(halfD)
+
+F = [F0, F1, F2]
+
+x = sint(5)
+
+y = oprp_eval(halfD, r, F, x)
+
+print_ln("y = %s", y.reveal())
+
+
+for i in range(r):
+  for j in range(1 << halfD):
+    print_ln("F_%s[%s] = %s", i, j, F[i][j].reveal())

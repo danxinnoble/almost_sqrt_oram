@@ -9,7 +9,7 @@ def oprf_table_init(k):
 
   @for_range(h)
   def set_value(i):
-    lookup_table[i] = sint.get_random_int(5)
+    lookup_table[i] = sint.get_random_int(k)
 
   return lookup_table
 
