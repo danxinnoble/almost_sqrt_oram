@@ -1,0 +1,15 @@
+execfile('/root/SCALE-MAMBA/Programs/sqrt_oram/sqrt_oram.mpc')
+execfile('/root/SCALE-MAMBA/Programs/test_util/test_util.mpc')
+
+testi=0
+
+
+if(True): 
+
+  print_ln("Testing get_max_number_of_queries")
+
+  n = 128
+  q = sqrt_oram_max_queries(n)
+
+  print_ln("Expect: %s", 6)
+  print_ln("Actual: %s", q)   
