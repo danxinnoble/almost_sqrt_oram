@@ -2,6 +2,8 @@
 cd 
 git clone https://github.com/KULeuven-COSIC/SCALE-MAMBA.git
 cd SCALE-MAMBA 
+git checkout -b v1.7 46a5fa4be
+
 mv /root/config/CONFIG.mine .
 
 mv /root/source/benchmark.sh .

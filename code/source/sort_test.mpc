@@ -2,6 +2,10 @@ execfile('/root/SCALE-MAMBA/Programs/sort/sort.mpc')
 execfile('/root/SCALE-MAMBA/Programs/test_util/test_util.mpc')
 execfile('/root/SCALE-MAMBA/Programs/shuffle/shuffle.mpc')
 
+import random
+
+N=SED_THIS_TO_NUMBER_OF_PLAYERS
+
 testi = 0
 
 if(False):
@@ -116,7 +120,7 @@ if(False):
     check(1, allFine[0])
 
 
-if(True):
+if(False):
     testi = new_test(testi)
 
     import random
@@ -162,3 +166,31 @@ if(False):
     print_ln("Bad inputs supplied to permutation switches.")
     end_if()
 
+
+if(True):
+
+    testi = new_test(testi)
+    
+    k = 4
+    n = 1 << k
+
+    keys = sint.Array(n)
+    data = sint.Array(n)
+
+    for i in range(n):
+        keys[i] = sint(i)
+        data[i] = sint(random.randint(-100000, 100000))
+
+    print_ln("Original")
+    for i in range(n):
+        print_ln("F[%s] = %s", keys[i].reveal(), data[i].reveal())
+
+    shuffle_securely(keys, data, k, N)
+    print_ln("shuffled")
+    for i in range(n):
+        print_ln("F[%s] = %s", keys[i].reveal(), data[i].reveal())
+
+    sort_all_keys(keys, data, n, N)
+    print_ln("sorted")
+    for i in range(n):
+        print_ln("F[%s] = %s", keys[i].reveal(), data[i].reveal())

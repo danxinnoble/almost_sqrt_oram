@@ -1,3 +1,5 @@
+execfile('/root/SCALE-MAMBA/Programs/shuffle/shuffle.mpc')
+
 
 def mux(cond, ifTrue, ifFalse):
     return ifFalse + cond*(ifTrue - ifFalse)
@@ -58,6 +60,68 @@ def bitonic_sort(keys, data, lo, n):
                     i = (j >> k) * (1 << (k+1)) + j % (1 << k)
                     i2 = mux(q==0, ((j >> k) + 1) * (1 << (k+1)) - (1 + (j % (1 << k))), i + (1 << k))
                     cmp_swap(keys, data, i, i2)
+
+# Sorts data based on keys, where keys contains each possible key once
+# n size of data (and number of keys) is a power of two
+# threshold for the MPC system
+def sort_all_keys(keys, data, n, n_players):
+    c = logOfAPowerOfTwo(n)
+    shuffle_securely(keys, data, c, n_players)
+
+    keys_clear = cint.Array(n)
+    @for_range(n)
+    def reveal_key(i):
+        keys_clear[i] = keys[i].reveal()
+
+    merge_sort_clear(keys_clear, data, n)
+
+    # Rather than returning arrays, we are updating in place
+    #   so we also need to update keys.
+    @for_range(n)
+    def update_key(i):
+        keys[i] = keys_clear[i]
+
+# Sorts on public keys, private data (but locations of data are not private)
+# Assumes n is power of 2
+def merge_sort_clear(keys, data, n):
+    merged = cint.Array(n)
+    merged_data = sint.Array(n)
+    c = logOfAPowerOfTwo(n)
+    m = 1 << (c - 1)
+    i = cint.Array(1)
+    j = cint.Array(1)
+    incLeft = cint.Array(1)
+    @for_range(c)
+    def sort_level(d):
+        i[0] = cint(0)
+        j[0] = cint(m)
+	@for_range(n)
+	def loop(k):
+            if_then(((i[0] % (1 << d)) == 0)*((j[0] - i[0]) < m))
+            incLeft[0] = cint(0)    # merging left is done, must merge rest of right
+            else_then() 
+            if_then(((j[0] % (1 << d)) == 0)*((j[0] - i[0]) > m))
+            incLeft[0] = cint(1)    # merging right is done, must merge rest of left
+            else_then()
+            incLeft[0] = (keys[i[0]] < keys[j[0]])
+            end_if()
+	    end_if()
+            
+            if_then(incLeft[0])
+            merged[k] = keys[i[0]]
+            merged_data[k] = data[i[0]]
+            i[0] = i[0] + cint(1)
+            else_then()
+            merged[k] = keys[j[0]]
+            merged_data[k] = data[j[0]]
+            j[0] = j[0] + cint(1)
+            end_if()
+
+        @for_range(n)
+        def loop(k):
+            keys[k] = merged[k]
+            data[k] = merged_data[k]
+        
 
 
 # WARNING: This reveals the relative ordering in the input permutation
