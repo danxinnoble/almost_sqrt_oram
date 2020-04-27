@@ -10,7 +10,7 @@ def shuffle(elems, gates, d):
     i = t + (t >=d) * (2*d -1 - 2*t)  # i = 0, ..., d-2, d-1, d-2, ... 0
     @for_range(1 << (d-1))
     def inner_loop(j):
-      b = gates[(1 << (d-1)) *i + j]
+      b = gates[(1 << (d-1)) *t + j]
       k = 2*(j >> i) + (j % (1 << i))
 
       # if(b) swap(elems[k], elems[k + (1 << i))
@@ -68,36 +68,27 @@ def shuffle_securely(elems, data, d, n):
             data[j] = data[j] + allIsWell[0]*(data_new[j]-data[j])
         print_ln("Player %s provided good input? %s", i, allIsWell[0])
 
-
 # Allows a player to input the bits of the switches.
 def shuffle_player(elems, data, d, l, allIsWell):
+  nGates = (2*d-1) * (1 << (d-1)) 
+  gates = sint.Array(nGates)
+
   allIsWell[0] = cint(1)
-  @for_range(2*d - 1)
-  def loop(t):
-    i = t + (t >=d) * (2*d -1 - 2*t)  # i = 0, ..., d-2, d-1, d-2, ... 0
-    @for_range(1 << (d-1))
-    def inner_loop(j):
-      b = sint.get_private_input_from(l)
-      check = b*(1-b)
-      if_then(check.reveal())    # if (check.reveal() != 0)
-      allIsWell[0] = cint(0)    # Someone cheated. Abort protocol when you can.
-      else_then()
-      do_nothing()
-      end_if()
+  b = sint.Array(1)
+  @for_range(nGates)
+  def loop(i):
+    b[0] = sint.get_private_input_from(l)
+    check = b[0]*(1-b[0])
+    # if (check.reveal() != 0), i.e. Player l cheated, input was not in {0, 1}.
+    if_then(check.reveal()) 
+    # then set to fixed value
+    allIsWell[0] = cint(0)
+    b[0] = sint(1)
+    else_then()
+    do_nothing()
+    end_if()
+    gates[i] = b[0]
 
-      k = 2*(j >> i) + (j % (1 << i))
-
-      # if(b) 
-      #    swap(elems[k], elems[k + (1 << i)])
-      #    swap(data[k], data[k + (1 << i)])
-      diff = elems[k + (1 << i)] - elems[k]
-      bDiff = b * diff
-      elems[k] = elems[k] + bDiff
-      elems[k + (1 << i)] = elems[k + (1 << i)] - bDiff
-
-      dataDiff = data[k + (1 << i)] - data[k]
-      bDataDiff = b * dataDiff
-      data[k] = data[k] + bDataDiff
-      data[k + (1 << i)] = data[k + (1 << i)] - bDataDiff
-
+  shuffle(elems, gates, d)
+  shuffle(data, gates, d)
 

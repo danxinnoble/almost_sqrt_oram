@@ -5,6 +5,10 @@ N=SED_THIS_TO_NUMBER_OF_PLAYERS
 
 testi=0
 
+# BEWARE HOW YOU COMBINE THESE TESTS
+# If it requests any player to shuffle, all players will supply bits
+# These bits may therefore be the ones used by a subsequent test.
+
 if(False):
 
 	testi = new_test(testi)
@@ -17,7 +21,7 @@ if(False):
 	def set_elem(i):
 	    elems[i] = sint(i)
 
-	nGates = n * k - (1 << k-1)
+	nGates = (1 << k-1) * (2 * k - 1)
 	gates = sint.Array(nGates)
 
 	@for_range(nGates)
@@ -54,7 +58,7 @@ if(False):
 	print_ln("Complete")
 
 
-if(False):
+if(True):
 	
 	testi = new_test(testi)
 
@@ -70,6 +74,9 @@ if(False):
 
         allIsWell = cint.Array(1)
         allIsWell[0] = cint(1)  # i.e. true
+
+        cint.public_output(cint(25))
+        cint.public_output(cint(k))
 
 	shuffle_player(elems, data, k, 0, allIsWell)
 
@@ -102,7 +109,7 @@ if(False):
 	print_ln("Complete")
 
 
-if(True):
+if(False):
 
     testi = new_test(testi)
 

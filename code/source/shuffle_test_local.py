@@ -11,11 +11,13 @@ playerId = int(argv[1])
 fout = open('Data/Player' + str(playerId) + '_in.txt', 'w')
 fin = open('Data/Player' + str(playerId) + '_out.txt', 'r')
 
-line = fin.readline()
-command=int(line)
+while True:
 
-if command==25:
-  waksman_io(fin, fout)
+  line = fin.readline()
+  command=int(line)
+
+  if command==25:
+    waksman_io(fin, fout)
 
 
 
