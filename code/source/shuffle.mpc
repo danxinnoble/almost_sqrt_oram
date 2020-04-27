@@ -21,20 +21,13 @@ def shuffle(elems, gates, d):
 
 
 def shuffle_fixed(elems, d):
-  @for_range(2*d - 1)
-  def loop(t):
-    i = t + (t >=d) * (2*d -1 - 2*t)  # i = 0, ..., d-2, d-1, d-2, ... 0
-    @for_range(1 << (d-1))
-    def inner_loop(j):
-      b = sint(1)
-      k = 2*(j >> i) + (j % (1 << i))
+  nGates = (1 << (d-1)) * (2 * d - 1)
+  gates = sint.Array(nGates)
+  @for_range(nGates)
+  def setGate(i):
+    gates[i] = sint(1)
 
-      # if(b) swap(elems[k], elems[k + (1 << i))
-      diff = elems[k + (1 << i)] - elems[k]
-      bDiff = b * diff
-      elems[k] = elems[k] + bDiff
-      elems[k + (1 << i)] = elems[k + (1 << i)] - bDiff
-
+  shuffle(elems, gates, d)
 
 # It seems that if statements cannot have empty else blocks. 
 def do_nothing():
@@ -68,27 +61,51 @@ def shuffle_securely(elems, data, d, n):
             data[j] = data[j] + allIsWell[0]*(data_new[j]-data[j])
         print_ln("Player %s provided good input? %s", i, allIsWell[0])
 
-# Allows a player to input the bits of the switches.
-def shuffle_player(elems, data, d, l, allIsWell):
-  nGates = (2*d-1) * (1 << (d-1)) 
-  gates = sint.Array(nGates)
-
-  allIsWell[0] = cint(1)
-  b = sint.Array(1)
+def ensureValidBits(nGates, gates, allIsWell):
+  check = sint.Array(1)
   @for_range(nGates)
-  def loop(i):
-    b[0] = sint.get_private_input_from(l)
-    check = b[0]*(1-b[0])
+  def check_gate(i):
+    check[0] = gates[i]*(1-gates[i]) 
     # if (check.reveal() != 0), i.e. Player l cheated, input was not in {0, 1}.
-    if_then(check.reveal()) 
+    if_then(check[0].reveal()) 
     # then set to fixed value
     allIsWell[0] = cint(0)
-    b[0] = sint(1)
+    gates[i] = sint(1)
     else_then()
     do_nothing()
     end_if()
-    gates[i] = b[0]
 
-  shuffle(elems, gates, d)
-  shuffle(data, gates, d)
+def getGates(nGates, l):
+  gates = sint.Array(nGates)
+  @for_range(nGates)
+  def getGate(i):
+    gates[i] = sint.get_private_input_from(l)
+  return gates
 
+def getValidGates(d, l, allIsWell):
+  nGates = (2*d-1) * (1 << (d-1)) 
+  gates = getGates(nGates, l)
+
+  allIsWell[0] = cint(1)
+  ensureValidBits(nGates, gates, allIsWell)
+
+  return gates
+
+# Allows a player to input the bits of the switches.
+def shuffle_player(arr0, arr1, d, l, allIsWell):
+  gates = getValidGates(d, l, allIsWell)
+  shuffle(arr0, gates, d)
+  shuffle(arr1, gates, d)
+
+def shuffle_player_1(arr, d, l, allIsWell):
+  gates = getValidGates(d, l, allIsWell)
+  shuffle(arr, gates, d)
+
+def shuffle_player_3(arr0, arr1, arr2, d, l):
+  allIsWell = cint.Array(1)
+  gates = getValidGates(d, l, allIsWell)
+  shuffle(arr0, gates, d)
+  shuffle(arr1, gates, d)
+  shuffle(arr2, gates, d)
+
+  
