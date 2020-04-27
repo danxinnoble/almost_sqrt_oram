@@ -37,29 +37,15 @@ def do_nothing():
 # Have each person supply a Waksman permutation
 # elems, data : arrays of length 2^d
 # n : Number of players
-def shuffle_securely(elems, data, d, n):
-    m = 1 << d
-    allIsWell = cint.Array(1)
+def shuffle_securely(arr0, arr1, d, n):
+  allIsWell = cint.Array(1)
+  
+  # Everyone should shuffle
+  cint.public_output(WAKSMAN_SHUFFLE)
+  cint.public_output(cint(d))
 
-    # Indicate that local IO should prepare to locally do a shuffle
-    cint.public_output(WAKSMAN_SHUFFLE)
-    cint.public_output(cint(d))
-
-    for i in range(n):
-        elems_new = sint.Array(m)
-        data_new = sint.Array(m)
-        @for_range(m)
-        def copy(j):
-            elems_new[j] = elems[j]
-            data_new[j] = data[j]
-
-        shuffle_player(elems_new, data_new, d, i, allIsWell)
-
-        @for_range(m)
-        def copy_back(j):
-            elems[j] = elems[j] + allIsWell[0]*(elems_new[j]-elems[j])
-            data[j] = data[j] + allIsWell[0]*(data_new[j]-data[j])
-        print_ln("Player %s provided good input? %s", i, allIsWell[0])
+  for i in range(n):
+    shuffle_player(arr0, arr1, d, i, allIsWell)
 
 # If someone provides bad input, just use a fixed shuffle
 # Don't bother ignoring their shuffle, just set it to a fixed value
