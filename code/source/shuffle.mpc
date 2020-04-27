@@ -61,6 +61,16 @@ def shuffle_securely(elems, data, d, n):
             data[j] = data[j] + allIsWell[0]*(data_new[j]-data[j])
         print_ln("Player %s provided good input? %s", i, allIsWell[0])
 
+# If someone provides bad input, just use a fixed shuffle
+# Don't bother ignoring their shuffle, just set it to a fixed value
+def shuffle_securely_3(arr0, arr1, arr2, d, n):
+  # Everyone should shuffle
+  cint.public_output(WAKSMAN_SHUFFLE)
+  cint.public_output(cint(d))
+
+  for i in range(n):
+    shuffle_player_3(arr0, arr1, arr2, d, i)
+
 def ensureValidBits(nGates, gates, allIsWell):
   check = sint.Array(1)
   @for_range(nGates)

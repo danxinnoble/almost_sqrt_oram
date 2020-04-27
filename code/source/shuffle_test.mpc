@@ -125,7 +125,7 @@ if(False):
     def reveal_and_print(i):
         print_ln("%s: %s", elems[i].reveal(), data[i].reveal())
 
-if(True):
+if(False):
 
   testi = new_test(testi)
 
@@ -150,4 +150,22 @@ if(True):
   for i in range(1 << k):
     print_ln("%s, %s, %s", arr0[i].reveal(), arr1[i].reveal(), arr2[i].reveal())
 
+if(True):
 
+  testi = new_test(testi)
+
+  k = 4
+  arr0 = sint.Array(1 << k)
+  arr1 = sint.Array(1 << k)
+  arr2 = sint.Array(1 << k)
+
+  for i in range(1 << k):
+    arr0[i] = sint(i)
+    arr1[i] = sint((1<<k) - i)
+    arr2[i] = sint((1<<k) - i)
+
+  shuffle_securely_3(arr0, arr1, arr2, k, N)
+
+  print_ln("Results of 3-array everybody shuffle")
+  for i in range(1 << k):
+    print_ln("%s, %s, %s", arr0[i].reveal(), arr1[i].reveal(), arr2[i].reveal())
