@@ -4,7 +4,7 @@ execfile('/root/SCALE-MAMBA/Programs/test_util/test_util.mpc')
 testi=0
 
 
-if(True): 
+if(False): 
 
   print_ln("Testing get_max_number_of_queries")
 
@@ -12,4 +12,22 @@ if(True):
   q = sqrt_oram_max_queries(n)
 
   print_ln("Expect: %s", 6)
-  print_ln("Actual: %s", q)   
+  print_ln("Actual: %s", q)
+
+
+if(True):
+
+  print_ln("Testing sqrt_oram initialization.")
+
+  m = 16
+  data_orig = sint.Array(m)
+
+  for i in range(m):
+    data_orig[i] = sint(i * i + i + 3)
+
+  n, ind, data, count = sqrt_oram_init(m, data_orig)
+
+  print_ln("n = %s, count= %s", n, count)
+
+  for i in range(n):
+    print_ln("ind[%s] = %s, data[%s] = %s", i, ind[i].reveal(), i, data[i].reveal())   

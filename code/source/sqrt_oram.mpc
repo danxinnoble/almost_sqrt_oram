@@ -4,6 +4,10 @@ execfile('/root/SCALE-MAMBA/Programs/sort/sort.mpc')
 
 import math
 
+# Evaluated in a prime field, this equals p+1/2
+# This should never be used as a data point.
+NULL= sint(-1)/sint(2)
+
 # This is inefficient, but does the job.
 # Technically, all that is needed is that n >= m + q,
 #   where q is the number of queries allowed
@@ -21,3 +25,21 @@ def sqrt_oram_max_queries(n):
   q = int(math.pow(n, 0.375))
   return q 
 
+def sqrt_oram_init(m, data_orig):
+  n = get_size_virtual_array(m)
+
+  data = sint.Array(n)
+
+  for i in range(m):
+    data[i] = data_orig[i]
+
+  for i in range(m, n):
+    data[i] = NULL
+
+  ind = sint.Array(n)
+  for i in range(n):
+    ind[i] = sint(i)
+
+  count = 0
+
+  return n, ind, data, count 
