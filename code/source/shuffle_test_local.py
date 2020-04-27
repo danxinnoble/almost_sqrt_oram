@@ -16,8 +16,16 @@ while True:
   line = fin.readline()
   command=int(line)
 
+  # Everyone shuffle
   if command==25:
     waksman_io(fin, fout)
 
-
-
+  # Only one person shuffle
+  if command==26:
+    line = fin.readline()
+    playerToShuffle = int(line)
+    if playerToShuffle == playerId:
+      waksman_io(fin, fout)
+    else:
+      # If not the playerToShuffle, read the value of k, just to skip over it.
+      line = fin.readline()  

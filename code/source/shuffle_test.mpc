@@ -5,11 +5,8 @@ N=SED_THIS_TO_NUMBER_OF_PLAYERS
 
 testi=0
 
-# BEWARE HOW YOU COMBINE THESE TESTS
-# If it requests any player to shuffle, all players will supply bits
-# These bits may therefore be the ones used by a subsequent test.
 
-if(False):
+if(True):
 
 	testi = new_test(testi)
 
@@ -75,7 +72,8 @@ if(True):
         allIsWell = cint.Array(1)
         allIsWell[0] = cint(1)  # i.e. true
 
-        cint.public_output(cint(25))
+        cint.public_output(cint(26)) # Shuffle by only one player
+        cint.public_output(cint(0))  # Player to shuffle
         cint.public_output(cint(k))
 
 	shuffle_player(elems, data, k, 0, allIsWell)
@@ -109,7 +107,7 @@ if(False):
 	print_ln("Complete")
 
 
-if(False):
+if(True):
 
     testi = new_test(testi)
 
