@@ -61,6 +61,26 @@ def bitonic_sort(keys, data, lo, n):
                     i2 = mux(q==0, ((j >> k) + 1) * (1 << (k+1)) - (1 + (j % (1 << k))), i + (1 << k))
                     cmp_swap(keys, data, i, i2)
 
+def sort_all_keys_dont_modify(keys, data, n):
+    keys_clear = cint.Array(n)
+    data_copy = sint.Array(n)
+    @for_range(n)
+    def set(i):
+        keys_clear[i] = keys[i].reveal()
+        data_copy[i] = data[i]
+
+    merge_sort_clear(keys_clear, data_copy, n)
+    return keys_clear, data_copy
+
+def sort_all_keys_2(keys, data0, data1, n, n_players):
+    c = logOfAPowerOfTwo(n)
+    shuffle_securely_3(keys, data0, data1, c, n_players)
+
+    keys_clear, data0_sorted = sort_all_keys_dont_modify(keys, data0, n)
+    keys_clear, data1_sorted = sort_all_keys_dont_modify(keys, data1, n)
+
+    return keys_clear, data0_sorted, data1_sorted
+
 # Sorts data based on keys, where keys contains each possible key once
 # n size of data (and number of keys) is a power of two
 # threshold for the MPC system

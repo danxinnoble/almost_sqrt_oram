@@ -167,7 +167,7 @@ if(False):
     end_if()
 
 
-if(True):
+if(False):
 
     testi = new_test(testi)
     
@@ -194,3 +194,39 @@ if(True):
     print_ln("sorted")
     for i in range(n):
         print_ln("F[%s] = %s", keys[i].reveal(), data[i].reveal())
+
+
+if(True):
+
+    testi = new_test(testi)
+
+    k = 3
+    n = 1 << k
+
+    keys = sint.Array(n)
+    data0 = sint.Array(n)
+    data1 = sint.Array(n)
+
+    for i in range(n):
+      keys[i] = sint(3*i % (1<<k))
+      data0[i] = sint(i*i)
+      data1[i] = sint(100 - i*i)
+
+    keys_clear, data0, data1 = sort_all_keys_2(keys, data0, data1, n, N)
+
+    print_ln("Sorting completed") 
+    for i in range(n):
+      if_then(keys_clear[i] - cint(i))
+      print_ln("keys_clear[%s], Expect: %s, Actual: %s", i, i, keys_clear[i])
+      else_then()
+      do_nothing()
+      end_if()
+
+      if_then(data0[i].reveal() + data1[i].reveal() - cint(100))
+      print_ln("Expect data0[%s] + data1[%s] = 100, Actual: %s + %s = %s",
+            i, i, data0[i].reveal(), data1[i].reveal(), 
+            data0[i].reveal() + data1[i].reveal())
+      else_then()
+      do_nothing()
+      end_if()
+    print_ln("Checking complete")
