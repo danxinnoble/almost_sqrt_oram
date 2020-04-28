@@ -1,6 +1,7 @@
 execfile('/root/SCALE-MAMBA/Programs/shuffle/shuffle.mpc')
 execfile('/root/SCALE-MAMBA/Programs/oprp/oprp.mpc')
 execfile('/root/SCALE-MAMBA/Programs/sort/sort.mpc')
+execfile('/root/SCALE-MAMBA/Programs/linear_oram/linear_oram.mpc')
 
 import math
 
@@ -8,11 +9,20 @@ import math
 # This should never be used as a data point.
 NULL= sint(-1)/sint(2)
 
+# This is a mysterious magical number.
+# Should it be 7? Or more? Who knows?
+# See https://link.springer.com/content/pdf/10.1007/978-3-540-45146-4_30.pdf
+# In short, 7 suffices in the limit if POW < 0.5, even info-theoretically
+# But what this means concretely is hard to determine from the literature
+# Also, probably larger N_ROUNDS makes things harder for a poly-time adversary
+N_ROUNDS = 7
+
+POW = 0.375
+
 # This is inefficient, but does the job.
 # Technically, all that is needed is that n >= m + q,
 #   where q is the number of queries allowed
-# We also want n to be a power of 2.
-# So this assume
+# We also want n to be a power of 4 (so that sqrt(n) is a power of 2)
 def get_size_virtual_array(m):
   n = m*2
   return n
@@ -22,10 +32,10 @@ def get_size_virtual_array(m):
 #   addressing this question, but the results have no constants
 # n is the size of the oprp
 def sqrt_oram_max_queries(n):
-  q = int(math.pow(n, 0.375))
+  q = int(math.pow(n, POW))
   return q 
 
-def sqrt_oram_init(m, data_orig):
+def sqrt_oram_init(m, data_orig, n_players):
   n = get_size_virtual_array(m)
 
   data = sint.Array(n)
@@ -40,6 +50,56 @@ def sqrt_oram_init(m, data_orig):
   for i in range(n):
     ind[i] = sint(i)
 
-  count = 0
+  P, ind, data, s_keys, s_data, s_count = sqrt_oram_shuffle(n, ind, data, n_players)
 
-  return n, ind, data, count 
+  return n, P, ind, data, s_keys, s_data, s_count
+
+def sqrt_oram_shuffle(n, ind, data, N_PLAYERS):
+  sort_all_keys(ind, data, n, N_PLAYERS)
+
+  d = logOfAPowerOfTwo(n)
+  halfD = int(d/2)
+  sqrtN = 1 << halfD
+
+  max_q = sqrt_oram_max_queries(n)
+
+  P = [oprf_table_init(halfD) for i in range(N_ROUNDS)]
+  for r in range(N_ROUNDS):
+    B = sint.Array(sqrtN)
+    C = sint.Array(n)
+    for i in range(sqrtN):
+      B[i] = oprf_table_eval(P[r], halfD, i)
+      for j in range(sqrtN):
+        C[sqrtN*j + i] = i*sqrtN + ((j + B[i]) % (1 << halfD))
+    
+    C_clear, ind, data = sort_all_keys_2(C, ind, data, n, N_PLAYERS)
+
+  stash_keys, stash_data, stash_count = linear_oram_init(max_q)
+
+  return P, ind, data, stash_keys, stash_data, stash_count
+  # I miss object-oriented programming ... T_T
+     
+# For now assuming just reads
+def sqrt_oram_read(k, P, ind, data, s_keys, s_data, s_count, n, m, n_players):
+  d = logOfAPowerOfTwo(n)
+  halfD = int(d/2)
+  max_q = sqrt_oram_max_queries(n)
+  if s_count == max_q:
+    P, ind, data, s_keys, s_data, s_count = sqrt_oram_shuffle(n, ind, data, n_players)
+
+  stash_val = linear_oram_read(k, s_keys, s_data, s_count)
+
+  i = mux(stash_val == NOT_FOUND, k, sint(m + s_count))
+
+  p = oprp_eval(halfD, N_ROUNDS, P, i).reveal()
+  if(ind[p].reveal() != i.reveal()):
+    print_ln('Error: prp accessed wrong location. Expected: %s, Actual: %s',
+      i.reveal(), ind[p].reveal())
+
+  table_val = data[p]
+
+  s_keys, s_data, s_count = linear_oram_write(i, table_val, s_keys, s_data, s_count)
+
+  output = mux(stash_val == NOT_FOUND, table_val, stash_val)
+
+  return output

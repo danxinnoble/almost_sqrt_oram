@@ -3,9 +3,10 @@ execfile('/root/SCALE-MAMBA/Programs/test_util/test_util.mpc')
 
 testi=0
 
+N=SED_THIS_TO_NUMBER_OF_PLAYERS
 
 if(False): 
-
+  testi = new_test(testi)
   print_ln("Testing get_max_number_of_queries")
 
   n = 128
@@ -16,18 +17,34 @@ if(False):
 
 
 if(True):
-
+  testi = new_test(testi)
   print_ln("Testing sqrt_oram initialization.")
 
-  m = 16
+  m = 8
   data_orig = sint.Array(m)
 
   for i in range(m):
     data_orig[i] = sint(i * i + i + 3)
 
-  n, ind, data, count = sqrt_oram_init(m, data_orig)
+  n, P, ind, data, s_keys, s_data, s_count = sqrt_oram_init(m, data_orig, N)
 
-  print_ln("n = %s, count= %s", n, count)
+  print_ln("n = %s, count= %s", n, s_count)
 
   for i in range(n):
-    print_ln("ind[%s] = %s, data[%s] = %s", i, ind[i].reveal(), i, data[i].reveal())   
+    print_ln("ind[%s] = %s, data[%s] = %s", i, ind[i].reveal(), i, data[i].reveal())
+
+  d = logOfAPowerOfTwo(n)
+  halfD = int(d/2)
+  sqrtN = 1 << halfD
+
+  for i in range(N_ROUNDS):
+    for j in range(sqrtN):
+      print_ln("P[%s][%s] = %s", i, j, P[i][j].reveal())
+
+# Needs previous test to be true for setup
+if(True):
+  testi = new_test(testi)
+  print_ln("Testing sqrt_oram access")
+
+  datum = sqrt_oram_read(5, P, ind, data, s_keys, s_data, s_count, n, m, N)
+  check(33, datum)
