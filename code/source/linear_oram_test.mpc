@@ -5,21 +5,23 @@ execfile('/root/SCALE-MAMBA/Programs/test_util/test_util.mpc')
 testi=0
 
 ##### Test a basic read works ######################
-testi = new_test(testi)
-
-m = 1000
-
-data_orig = sint.Array(m)
-
-for i in range(m):
-  data_orig[i] = sint(i)
-
-data = linear_oram_init(m, data_orig)
-
-k = sint(777)
-val = linear_oram_read(k, data, m)
-
-check(k.reveal(), val)
-
-
-
+if(True):
+  
+  testi = new_test(testi)
+  
+  m = 1000
+  
+  keys, data, count = linear_oram_init(m)
+  
+  k = sint(777)
+  v = sint(24)
+  
+  # A[777] = 24
+  keys, data, count = linear_oram_write(k, v, keys, data, count)
+  
+  val = linear_oram_read(k, keys, data, count)
+  
+  check(v.reveal(), val)
+  
+  
+  

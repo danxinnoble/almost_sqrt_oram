@@ -1,31 +1,38 @@
 
+# This is not quite ORAM
+# It does not hide whether an access is a read or a write
+# A read cost is proportional to the number of writes so far
+# A write cost is constant
+
 # p+1/2. 
 # However data is packed, DO NOT USED THIS AS A VALID DATA POINT
 NOT_FOUND = cint(1)/cint(2)
 
-# The size of each element of data_orig must be less than the field size
-def linear_oram_init(m, data_orig):
-  data = sint.Array(m)
-  for i in range(m):
-    data[i] = sint(data_orig[i])
-
-  return data
+def linear_oram_init(max_size):
+  count = 0
+  keys = sint.Array(max_size)
+  data = sint.Array(max_size)
+  return keys, data, count
 
 
-def linear_oram_read(i, data, m):
+def linear_oram_read(i, keys, data, count):
   datum = sint.Array(1)
   datum[0] = sint(NOT_FOUND)
-  @for_range(m)
+  @for_range(count)
   def range_loop(j):
-    datum[0] = datum[0] + (j == i)*(data[j] - datum[0])
+    datum[0] = datum[0] + (keys[j] == i)*(data[j] - datum[0])
 
   return datum[0]
   
-def linear_oram_write(i, val, data, m):
-  @for_range(m)
-  def range_loop(j):
-    data[j] = data[j] + (i == j)*(val - data[j])
+# Since later writes appear later in the array,
+#   even if key is written twice, the linear_oram_read always
+#   takes the last-occurring value in the array
+def linear_oram_write(key, val, keys, data, count):
 
-  return
+  keys[count] = key
+  data[count] = val
+  count = count + 1
 
+  return keys, data, count
+  
 
