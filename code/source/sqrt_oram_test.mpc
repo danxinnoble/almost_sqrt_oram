@@ -46,5 +46,21 @@ if(True):
   testi = new_test(testi)
   print_ln("Testing sqrt_oram access")
 
-  datum = sqrt_oram_read(5, P, ind, data, s_keys, s_data, s_count, n, m, N)
+  datum, s_keys, s_data, s_count = sqrt_oram_read(5, P, ind, data, s_keys, s_data, s_count, n, m, N)
   check(33, datum)
+  check(1, s_count)
+
+# Assumes setup has happened in a previous test
+if(True):
+  testi = new_test(testi)
+  print_ln("Test that reshuffling happens")
+
+  q = sqrt_oram_max_queries(n)
+
+  prev_s_count = s_count
+
+  for i in range(10*q+1):
+    datum, s_keys, s_data, s_count = sqrt_oram_read(sint(1), P, ind, data, s_keys, s_data, s_count, n, m, N)
+
+  print_ln("q = %s", q)
+  check(((prev_s_count + q) % q) + 1, s_count)

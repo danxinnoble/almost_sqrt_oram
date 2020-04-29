@@ -5,7 +5,12 @@ N=SED_THIS_TO_NUMBER_OF_PLAYERS
 
 print_ln("Benchmarking: cost of shuffle + q accesses.")
 
-m = 8
+m = SED_TO_VALUE_OF_M
+# SCALE-MAMBA has a high setup cost.
+# For small m it is therefore important to repeat a number of times
+#   so that this setup cost does not significantly affect the result
+t = SED_TO_NUMBER_OF_REPEATS
+
 data_orig = sint.Array(m)
 
 for i in range(m):
@@ -17,7 +22,9 @@ q = sqrt_oram_max_queries(n)
 
 print_ln("m = %s, n = %s, q= %s", m, n, q)
 
-for i in range(q):
-  datum = sqrt_oram_read(sint(i), P, ind, data, s_keys, s_data, s_count, n, m, N)
+
+
+for k in range(t*q):
+  datum, s_keys, s_data, s_count = sqrt_oram_read(sint(i), P, ind, data, s_keys, s_data, s_count, n, m, N)
 
 print_ln("done")
