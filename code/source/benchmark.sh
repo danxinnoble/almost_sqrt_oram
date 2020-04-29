@@ -104,6 +104,8 @@ fi
 
 COMM_T0=$(( ${COMM_T0_LOCAL} + ${COMM_T0_ETH} ))
 
+T0=$(date +%s)
+
 for PLAYER in ${PLAYERS}; do
   ./Player.x -max ${N_TRIPLES},${N_SQUARES},${N_BITS} -maxI ${N_IO} $PLAYER $PROG_NAME > output_${PLAYER}.txt 2> err_${PLAYER}.txt & 
 done;
@@ -111,6 +113,8 @@ done;
 for PLAYER in ${PLAYERS}; do
   wait;
 done;
+
+T1=$(date +%s)
 
 COMM_T1_LOCAL=$(cat /proc/net/dev | grep -o lo..\[0-9\]* | grep -o \[0-9\]*$)
 
@@ -126,8 +130,10 @@ then
   COMM_T1_ETH=0
 fi
 
+
 COMM_T1=$(( ${COMM_T1_LOCAL} + ${COMM_T1_ETH} ))
 
-echo 'Communication Cost (bytes):' $((${COMM_T1} - ${COMM_T0})) > communication.txt
+echo 'Run time (s):' $(( ${T1} - ${T0} )) > communication.txt
+echo 'Communication Cost (bytes):' $((${COMM_T1} - ${COMM_T0})) >> communication.txt
 
  
