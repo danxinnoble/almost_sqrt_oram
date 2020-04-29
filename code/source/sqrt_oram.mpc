@@ -19,12 +19,12 @@ N_ROUNDS = 7
 
 POW = 0.375
 
-# This is inefficient, but does the job.
-# Technically, all that is needed is that n >= m + q,
-#   where q is the number of queries allowed
-# We also want n to be a power of 4 (so that sqrt(n) is a power of 2)
 def get_size_virtual_array(m):
-  n = m*2
+  n = 1
+  q = sqrt_oram_max_queries
+  while n < (m + q)
+    n = n << 2                    # n needs to be a power of 4
+    q = sqrt_oram_max_queries(n)
   return n
 
 # The correct value of this is a profound mystery
@@ -92,9 +92,12 @@ def sqrt_oram_read(k, P, ind, data, s_keys, s_data, s_count, n, m, n_players):
   i = mux(stash_val == NOT_FOUND, k, sint(m + s_count))
 
   p = oprp_eval(halfD, N_ROUNDS, P, i).reveal()
-  if(ind[p].reveal() != i.reveal()):
-    print_ln('Error: prp accessed wrong location. Expected: %s, Actual: %s',
+  if_then(ind[p].reveal() != i.reveal())
+  print_ln('Error: prp accessed wrong location. Expected: %s, Actual: %s',
       i.reveal(), ind[p].reveal())
+  else_then()
+  do_nothing()
+  end_if()
 
   table_val = data[p]
 
