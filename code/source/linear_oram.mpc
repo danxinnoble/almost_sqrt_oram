@@ -14,6 +14,17 @@ def linear_oram_init(max_size):
   data = sint.Array(max_size)
   return keys, data, count
 
+# Create a linear oram full of zeros
+# Just for benchmarking purposes
+def linear_oram_init_zeros(size):
+  keys = sint.Array(size)
+  data = sint.Array(size)
+  @for_range(size)
+  def set(i):
+    keys[i] = sint(i)
+    data[i] = sint(0)
+  count = size
+  return keys, data, count
 
 def linear_oram_read(i, keys, data, count):
   datum = sint.Array(1)

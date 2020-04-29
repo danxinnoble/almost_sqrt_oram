@@ -1,0 +1,17 @@
+execfile('/root/SCALE-MAMBA/Programs/linear_oram/linear_oram.mpc')
+  
+print_ln("Benchmarking: Cost of linear ORAM access.")
+
+m = SED_TO_VALUE_OF_M
+print_ln("Data size: %s", m)
+
+keys, data, count = linear_oram_init_zeros(m)
+
+k = sint(0)
+
+for i in range(100):
+  d = linear_oram_read(k, keys, data, count)
+
+print_ln("A[%s] = %s", k.reveal(), d.reveal())
+
+
