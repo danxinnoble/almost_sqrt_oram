@@ -1,0 +1,23 @@
+execfile('/root/SCALE-MAMBA/Programs/sqrt_oram/sqrt_oram.mpc')
+execfile('/root/SCALE-MAMBA/Programs/test_util/test_util.mpc')
+
+N=SED_THIS_TO_NUMBER_OF_PLAYERS
+
+print_ln("Benchmarking: cost of shuffle + q accesses.")
+
+m = 8
+data_orig = sint.Array(m)
+
+for i in range(m):
+  data_orig[i] = sint(i * i + i + 3)
+
+n, P, ind, data, s_keys, s_data, s_count = sqrt_oram_init(m, data_orig, N)
+
+q = sqrt_oram_max_queries(n)
+
+print_ln("m = %s, n = %s, q= %s", m, n, q)
+
+for i in range(q):
+  datum = sqrt_oram_read(sint(i), P, ind, data, s_keys, s_data, s_count, n, m, N)
+
+print_ln("done")

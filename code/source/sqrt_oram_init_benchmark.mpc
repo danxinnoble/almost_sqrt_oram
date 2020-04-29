@@ -1,0 +1,21 @@
+execfile('/root/SCALE-MAMBA/Programs/sqrt_oram/sqrt_oram.mpc')
+execfile('/root/SCALE-MAMBA/Programs/test_util/test_util.mpc')
+
+N=SED_THIS_TO_NUMBER_OF_PLAYERS
+  
+print_ln("Benchmarking: Cost of sqrt_oram shuffle.")
+
+m = 8
+print_ln("Data size: %s", m)
+
+data_orig = sint.Array(m)
+
+for i in range(m):
+  data_orig[i] = sint(i * i + i + 3)
+
+# Technically init does more than shuffle, but very little more
+n, P, ind, data, s_keys, s_data, s_count = sqrt_oram_init(m, data_orig, N)
+
+print_ln("n = %s, count= %s", n, s_count)
+
+
