@@ -66,13 +66,19 @@ def sqrt_oram_shuffle(n, ind, data, N_PLAYERS):
 
   max_q = sqrt_oram_max_queries(n)
 
-  P = [oprf_table_init(halfD) for i in range(N_ROUNDS)]
-  for r in range(N_ROUNDS):
+  P = sint.Matrix(N_ROUNDS, sqrtN)
+  @for_range(N_ROUNDS)
+  def pickPRF(r):
+    prf = oprf_table_init(halfD)
+    @for_range(sqrtN)
+    def setVal(i):
+      P[r][i] = prf[i]
+
     B = sint.Array(sqrtN)
     C = sint.Array(n)
     @for_range(sqrtN)
     def eval(i):
-      B[i] = oprf_table_eval(P[r], halfD, i)
+      B[i] = oprf_table_eval(prf, halfD, i)
       @for_range(sqrtN)
       def set(j):
         C[sqrtN*j + i] = i*sqrtN + ((j + B[i]) % (1 << halfD))

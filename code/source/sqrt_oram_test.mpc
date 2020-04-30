@@ -60,9 +60,8 @@ if(True):
 
   prev_s_count = s_count
 
-  for i in range(q+1):
-    print_ln("count = %s", s_count)
+  for i in range(10*q + 1):
     datum, s_keys, s_data, s_count = sqrt_oram_read(sint(1), P, ind, data, s_keys, s_data, s_count, n, m, N)
 
   print_ln("q = %s", q)
-  check(((prev_s_count + q) % q) + 1, s_count)
+  check(((prev_s_count + 10*q ) % q) + 1, s_count)
