@@ -95,16 +95,13 @@ def sqrt_oram_read(k, P, ind, data, s_keys, s_data, s_count, n, m, n_players):
   sqrtN = 1 << halfD
 
   max_q = sqrt_oram_max_queries(n)
-  if_then(s_count == max_q)
-  Pnew, s_keysNew, s_dataNew, s_count = sqrt_oram_shuffle(n, ind, data, n_players)
-
-  for r in range(N_ROUNDS):
-    @for_range(sqrtN)
-    def update_val(j):
-      P[r][j] = Pnew[r][j]
-  else_then()
-  do_nothing()
-  end_if()
+  
+  if(s_count == max_q):
+    Pnew, s_keys, s_data, s_count = sqrt_oram_shuffle(n, ind, data, n_players)
+    for r in range(N_ROUNDS):
+      @for_range(sqrtN)
+      def update_val(j):
+        P[r][j] = Pnew[r][j]
 
   stash_val = linear_oram_read(k, s_keys, s_data, s_count)
 
