@@ -1,24 +1,75 @@
-\section{Efficient, simple, Square-Root ORAM}
+\section{Introduction}
 
-The original ORAM paper \cite{ostrovsky1997private} presented a protocol for performing
-oblivious-RAM with amortized cost $O(\sqrt{n} \log{n})$.
+Oblivious RAM (ORAM) is a technique by which
+a client can access a virtual memory of size $m$,
+by accessing some physical memory 
+in such a way that the physical memory accesses
+nothing about the virtual memory accesses.
+This is often understood in a setting in which a client
+outsources encrypted data to a server.
+While encrypting the data hides the content of the data
+the client's access patterns may leak sensitive information.
+Another setting in which ORAM is especially useful
+is in secure multi-party computation (MPC).
+These are protocols that allow a set of parties to compute
+a function on sensitive data without revealing the data itself.
+Sometimes the sensitive data may be owned by a particular
+party, but more generally, it may be secret-shared between
+the parties such that no single party can access any sensitive data.
+While efficient protocols exist for computing basic operations,
+a significant challenge arises if the indexes of memory accesses
+need to be kept secret.
+A potential solution to this is to implement an ORAM protocol
+inside of the MPC, so that the parties' memory accesses
+do not leak any information about sensitive data.
 
-In the secure-computation setting, a direct application of this
-protocol would require many evaluations of an oblivious PRF (OPRF).
-While in principle this is a constant-cost operation, in practice evaluating an OPRF is expensive. For instance, in the semi-honest, 2-party setting, the communication cost of oblivious versions of standard PRFs is around 170 Kb and around 20 Kb for MPC-optimized PRFs (\cite{hemenway2019private} Table 1) % This should be updated to reference the actual papers and use more recent results.
+Multiple ORAM schemes have been proposed through the years,
+generally falling either into the category of 
+tree-based designs \cite{shi2011oblivious, stefanov2013path, wang2015circuit},
+where newly-written elements are placed at the top of a tree
+and blocks are pushed downwards according to pre-assigned random values,
+or heirarchical designs \cite{ostrovsky1997private, asharov2018optorama}
+where newly-written elements are stored in a stash
+which is, when full, reshuffled into larger stashes
+of exponentially-increasing size. 
+These have gone from costing $\mathcal{O}(\log(m)^3)$ communication
+per access to costing $\mathcal{O}(\log(m))$ 
+communication per access.
 
-A different approach to square-root ORAM was therefore explored by Zahur et al is to use a recursive solution to store a look-up table for the evaluations of the PRF.
+However, it was observed by Zahur et al. \cite{zahur2016revisiting}
+that since the constants in these protocols are large,
+it is in practice more efficient, for certain ranges of $m$,
+to use protocols that are definitely sub-optimal asymptotically.
 
-We adopt a different approach. We use OPRFs as in the original protocol.
-However we take advantage of a number of facts to make the OPRFs more efficient.
-Firstly, each PRF will only be evaluated on $\sqrt{n}$ elements.
-Therefore, the PRF does not need to be secure up to an arbitrary number of 
-evaluations. In deed, it can be rendered completely insecure if evaluated
-on $\sqrt{n} + 1$ points and still be secure for our purposes.
-Secondly the PRF is evaluated over a small input.
-Thirdly, if the PRF is, in fact, a permutation and 
-if the function is evaluated for \emph{every} point in the range,
-the distribution of the output (when sorted or shuffled again)
-does not leak any information about the function.
-We achieve this using Feistel's technique to transform a PRF into a PRP.
+For instance, the original ORAM paper \cite{ostrovsky1997private} 
+presented a protocol with amortized cost $\mathcal{O}(\sqrt{m} \log{m})$
+per access.
+Zahur et al. present a modification of this protocol
+that out-performs the then-optimal Circuit ORAM \cite{wang2015circuit}
+for certain useful ranges of $m$.
+Zahur et al. observed that evaluating multiple 
+oblivious pseudo-random functions (OPRFs)
+during the shuffle step was a significant bottleneck in the original ORAM scheme.
+While, in theory each OPRF evaluation is constant cost, the constant is high.
+Zahur et al. managed to avoid this by using a recursive table look-up.
 
+We follow in the vein of Zahur et al. but try to make the OPRFs 
+efficient in a different way.
+We replace the OPRFs with Oblivious Pseudo-Random Permutations (OPRPs)
+and evaluate these using a Feistel Cipher, which in turn
+uses OPRFs, but does not need to evaluate them on as many 
+inputs as the original square-root ORAM protocol.
+
+Unfortunately, the security of the OPRP requires shuffling to occur
+more frequently than once every $\mathcal{O}(\sqrt{m})$ accesses,
+leading to a scheme that has complexity $\mathcal{O}(m^{\frac{5}{8}})$.
+Additionally, the appropriate parameters to ensure concrete security
+for Feistel Ciphers is not well understood.
+Improving the understanding of the security of this type of construction
+as well as methods for avoiding the $\mathcal{O}(\sqrt{m})$ bound
+remain as future work.
+
+We implemented the MPC-ORAM protocol 
+(with parameters for which security could not be proven)
+in SCALE-MAMBA and found that, for roughly $m > 4000$ this 
+scheme was more efficient than the na\"{i}ve Linear ORAM scheme.

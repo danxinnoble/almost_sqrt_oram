@@ -6,35 +6,38 @@ used in our ORAM construction.
 
 \subsection{Oblivious Pseudo-Random Function}
 
-A Pseudo-Random Function (PRF) is a keyed function such that
+A Pseudo-Random Function (PRF) is a keyed function
+$F: [\prfSize] \times \mathcal{K} \rightarrow [t]$, 
+where $\mathcal{K}$ is the set of possible keys.
+It has the property that
 any party possessing the key may easily compute the function,
-but such that the output of the function will appear random 
-to any party who does not possess the key.
+but any party who does not possess the key
+will not be able to distinguish the output from a random value
+(with high probability).
 An Oblivious PRF is one in which this computation is performed
 as a secure multiparty computation.
-Specifically, we require a protocol in which the key, input
-and output are all secret-shared among a number of parties.
 
 For this application it is in fact sufficient to use the simplest possible
 OPRF, namely a look-up table on random values.
-This is somewhat inefficient in that it requires generating and storing 
-$\sqrt{n}$ random $\frac{\log{n}}{2}$-bit secret-shared numbers
-and costs $\sqrt{n}$ secure-comparisons and 
-$\sqrt{n}$ muxes to be evaluated on a \emph{secret} input.
-However, it has the benefit that it can be evaluted on a
-\emph{public} input at constant cost.
+This is somewhat inefficient in that 
+initialization requires generating and storing 
+\prfSize random $\log{t}$-bit secret-shared numbers
+and OPRF evaluations on secret inputs requires 
+\prfSize secure-comparisons and \prfSize muxes 
+However, it has the benefit that OPRF evaluations on 
+\emph{public} inputs have constant cost.
 
 Of course, other OPRFs may be more efficient and since the design
-is modular they can easily be substituted in.
+is modular they can easily replace this construction.
 
 \begin{algorithm}
 \caption{OPRF}
 \label{alg:oprf}
 \begin{algorithmic}[1]
 
-\Procedure{OPRF.init}{size} \Comment{For ORAM, $size = \sqrt{n}$}
-\For{$i \gets 1$  to $size$} 
-    \State $table[i] \gets^r [size]$
+\Procedure{OPRF.init}{\prfSize, t}
+\For{$i \gets 1$  to \prfSize} 
+    \State $table[i] \gets^r [t]$
 \EndFor
 \State \textbf{return} self
 \EndProcedure
@@ -49,7 +52,7 @@ is modular they can easily be substituted in.
 
 \Procedure{OPRF.eval}{x}
 \State $res \gets 0$
-\For{$i \gets 1$ to $size$}
+\For{$i \gets 1$ to \prfSize}
     \OblivIf{$i = x$}
     \State $res \gets table[i]$
     \EndOblivIf
@@ -65,40 +68,42 @@ is modular they can easily be substituted in.
 
 A pseudo-random permutation (PRP) is a keyed permutation
 that an adversary cannot distinguish from a random permutation.
-A $k$-wise psuedo-random permutation is a PRP which is secure against
-any adversary that can learn at most $k$ evaluations of the PRP.
+A $q$-wise psuedo-random permutation is a PRP which is secure against
+any adversary that can learn at most $q$ evaluations of the PRP.
 On oblivious pseudo-random permutation (OPRP) is a MPC protocol
 that evaluates a PRP using secret data.
 
 For our application we want an OPRP that is $\sqrt{n}$-wise pseudo-random
-on a small domain $[1 \ldots n]$. 
+on a small domain $[n]$. 
 Unfortunately, we were not able to find such an OPRP, but we were able
 to find something with almost this functionality.
 
 A Feistel Cipher is a technique for constructing a PRP from a PRF.
-Namely, a PRF $F : [m] \rightarrow[m]$ can be transformed
-into a PRP $G : [m] \times [m] \rightarrow [m] \times [m]$. 
+Namely, a PRF $F : [\prfSize] \rightarrow[\prfSize]$ can be transformed
+into a PRP $G : [\prfSize] \times [\prfSize] \rightarrow [\prfSize] \times [\prfSize]$. 
+In our case we set $\prfSize = \sqrt{n}$ to construct a PRP on 
+$[n]$ from PRFs on $[\prfSize]$.
 The technique involves multiple rounds of evaluation of the following function.
-Let $i = (L, R)$, where $i \in [m] \times [m]$ and $L, R \in [m]$.
+Let $i = (L, R)$, where $i \in [\prfSize] \times [\prfSize]$ and $L, R \in [\prfSize]$.
 Let $B_j(i) = (R, L + F_j(R))$, where $F_j$ is a OPRF.
-$B_j$ is invertible and maps $[m] \times [m]$ to $[m] \times [m]$, 
+$B_j$ is invertible and maps $[\prfSize] \times [\prfSize]$ to $[\prfSize] \times [\prfSize]$, 
 so is a permutation.
 However, it is clearly not pseudo-random, since the last element of $i$ 
 completely reveals the first element of $B_j(i)$.
-Nevertheless, for a larger number of rounds, this is $k$-wise 
-pseudorandom for certain values of $k$.
+Nevertheless, for a larger number of rounds, this is $q$-wise 
+pseudorandom for certain values of $q$.
 
 The original paper that presented the Feistel cipher \cite{luby1988construct}
 proved that 3 rounds were sufficient to provide statistical pseudo-randomness
-for $k \ll n^{\frac{1}{4}}$.
+for $q \ll n^{\frac{1}{4}}$.
 Subsequent works examined the security for larger numbers of rounds.
 Patarin showed that, for any $\epsilon > 0$,
 seven rounds are sufficient to provide statistical pseudo-randomness for 
-$k \leq c n^{\frac{1}{2} - \epsilon})$ for some constant $c$ 
+$q \leq c n^{\frac{1}{2} - \epsilon})$ for some constant $c$ 
 \cite{patarin2003luby}.
 Unfortunately, it is not clear what the concrete advantage of the
 adversary is for a given $n$, $c$ and $\epsilon$.
-We chose to keep $ROUNDS=7$ and to set $c=1$ and $\epsilon = \frac{1}{4}$.
+We chose to keep $ROUNDS=7$ and to set $c=1$ and $\epsilon = \frac{1}{8}$.
 
 This protocol is described as an algorithm in the following figure,
 where the PRF is treated in a black-box manner.
@@ -108,7 +113,7 @@ where the PRF is treated in a black-box manner.
 \label{alg:oprp}
 \begin{algorithmic}[1]
 
-\Procedure{OPRP.init}{n, $OPRFs$}  \Comment{OPRFs contains ROUNDS OPRFs}
+\Procedure{OPRP.init}{n, $F$}  \Comment{F contains ROUNDS OPRFs}
 \State \textbf{return} self   \Comment{Remember initialization variables}
 \EndProcedure
 
@@ -120,10 +125,10 @@ where the PRF is treated in a black-box manner.
 
 \For{$i \gets 1$ to $ROUNDS$}
 \State $L_i \gets R_{i-1}$
-\State $R_i \gets L_{i-1} + OPRFs_{i}.eval(R_{i-1}) \bmod \sqrt{n}$
+\State $R_i \gets L_{i-1} + F_{i}.eval(R_{i-1}) \bmod \sqrt{n}$
 \EndFor
 
-\State $res \gets L_3\sqrt{n} + R_3$
+\State $res \gets L_{ROUNDS}\sqrt{n} + R_{ROUNDS}$
 \State \textbf{return} $res$
 \EndProcedure
 
@@ -156,6 +161,7 @@ The protocol is presented in Figure~\ref{fig:OblivSort}.
 \State $\tilde{A} = reveal(\hat{A})$
 \State $\bar{B} = sort(\tilde{A}, \hat{B})$
 \State \textbf{return} $\bar{B}$
+to be evaluated on a \emph{secret} input.
 \EndProcedure
 
 \end{algorithmic}
@@ -203,9 +209,9 @@ general case since the type of access (read vs write) can be public.
 
 \State
 
-\Procedure{LinearORAM.add}{$(\secret{x}, \secret{y})$} 
+\Procedure{LinearORAM.add}{$(x, y)$} 
 \Comment{Assumes fewer than $max\_size$ elements have already been added}
-\State $stash[nElem + 1] \gets (\secret{x}, \secret{y})$
+\State $stash[nElem + 1] \gets (x, y)$
 \State $nElem \gets nElem + 1$
 \EndProcedure
 
@@ -218,12 +224,12 @@ general case since the type of access (read vs write) can be public.
 
 \State
 
-\Procedure{LinearORAM.get}{$\secret{key}$}
-\State $\secret{res} \gets \bot$
+\Procedure{LinearORAM.get}{$key$}
+\State $res \gets \bot$
 \For{$j \gets 1$ to $nElem$}
-    \State $(\secret{x}, \secret{y}) \gets stash[j]$
-    \OblivIf{$\secret{key} = \secret{x}$}
-        \State $\secret{res} \gets \secret{y}$
+    \State $(x, y) \gets stash[j]$
+    \OblivIf{$key = x$}
+        \State $res \gets y$
     \EndOblivIf
 \EndFor
 \State \textbf{return} res

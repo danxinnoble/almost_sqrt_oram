@@ -46,3 +46,29 @@ Lastly initialization of a new stash (using a public parameter) leaks nothing.
 
 Therefore, the function SqrtORAM.shuffle leaks no information.
 \end{proof}
+
+\begin{theorem}
+For certain values of $c$ (though not the one used in the implementation)
+the ORAM protocol is secure.
+\end{theorem}
+
+\begin{proof}
+Patarin showed that a Feistel cipher with 7 rounds is a
+permutation from $[n] \rightarrow [n]$ 
+secure against chosen plaintext attacks,
+provided the adversary can only learn 
+$max\_evals \ll n^{\frac{1}{2} - \epsilon}$ evaluations of the PRP
+\cite{patarin2003luby}.
+
+We have already demonstrated that no information, including no
+evaluations of the PRP, is leaked in the SqrtORAM.shuffle.
+Therefore, the only evaluations of the PRP that the adversary may
+learn is the $max\_evals$ evaluations of the PRP.
+For a sufficiently small value of $c$ (not the $c$ from the implementation)
+this is therefore secure from Patarin's result.
+
+Since each shuffle picks new OPRFs and therefore a new PRP,
+any information learned about a previous PRP will not help
+the adversary distinguish subsequent PRPs from a random permutation.
+\end{proof}
+
