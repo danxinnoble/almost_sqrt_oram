@@ -10,7 +10,7 @@ A Pseudo-Random Function (PRF) is a keyed function
 $F: [\prfSize] \times \mathcal{K} \rightarrow [t]$, 
 where $\mathcal{K}$ is the set of possible keys.
 It has the property that
-any party possessing the key may easily compute the function,
+any party possessing the key can efficiently compute the function,
 but any party who does not possess the key
 will not be able to distinguish the output from a random value
 (with high probability).
@@ -21,9 +21,9 @@ For this application it is in fact sufficient to use the simplest possible
 OPRF, namely a look-up table on random values.
 This is somewhat inefficient in that 
 initialization requires generating and storing 
-\prfSize random $\log{t}$-bit secret-shared numbers
+$\prfSize$ random $\log{t}$-bit secret-shared numbers
 and OPRF evaluations on secret inputs requires 
-\prfSize secure-comparisons and \prfSize muxes 
+$\prfSize$ secure-comparisons and $\prfSize$ muxes. 
 However, it has the benefit that OPRF evaluations on 
 \emph{public} inputs have constant cost.
 
@@ -66,7 +66,8 @@ is modular they can easily replace this construction.
 
 \subsection{Oblivious Pseudo-Random Permutation}
 
-A pseudo-random permutation (PRP) is a keyed permutation
+A Pseudo-Random Permutation (PRP) is a keyed permutation
+$P : [n] \times \mathcal{K} \rightarrow [n]$
 that an adversary cannot distinguish from a random permutation.
 A $q$-wise psuedo-random permutation is a PRP which is secure against
 any adversary that can learn at most $q$ evaluations of the PRP.
@@ -77,10 +78,16 @@ For our application we want an OPRP that is $\sqrt{n}$-wise pseudo-random
 on a small domain $[n]$. 
 Unfortunately, we were not able to find such an OPRP, but we were able
 to find something with almost this functionality.
+The fact that the domain is small seems to make the construction of a PRP
+more challenging and while there has been some work towards constructing these
+\cite{black2002ciphers, morris2009encipher, stefanov2012fastprp},
+these solutions are not very efficient.
 
+One approach to this problem is to use a Feistel Cipher.
 A Feistel Cipher is a technique for constructing a PRP from a PRF.
-Namely, a PRF $F : [\prfSize] \rightarrow[\prfSize]$ can be transformed
-into a PRP $G : [\prfSize] \times [\prfSize] \rightarrow [\prfSize] \times [\prfSize]$. 
+Namely, a PRF $F \cross \mathcal{K} : [\prfSize] \rightarrow[\prfSize]$ 
+can be transformed into a PRP 
+$G : [\prfSize] \times [\prfSize] \times \mathcal{K} \rightarrow [\prfSize] \times [\prfSize]$. 
 In our case we set $\prfSize = \sqrt{n}$ to construct a PRP on 
 $[n]$ from PRFs on $[\prfSize]$.
 The technique involves multiple rounds of evaluation of the following function.
@@ -125,7 +132,7 @@ where the PRF is treated in a black-box manner.
 
 \For{$i \gets 1$ to $ROUNDS$}
 \State $L_i \gets R_{i-1}$
-\State $R_i \gets L_{i-1} + F_{i}.eval(R_{i-1}) \bmod \sqrt{n}$
+\State $R_i \gets ( L_{i-1} + F_{i}.eval(R_{i-1}) ) \bmod \sqrt{n}$
 \EndFor
 
 \State $res \gets L_{ROUNDS}\sqrt{n} + R_{ROUNDS}$
@@ -185,12 +192,13 @@ In an arithmetic ciruit MPC framework, this can be done using $O( (t+1) n \log{n
 
 \subsection{Linear ORAM}
 
-This is the trivial ORAM solution, in which the element is searched for
-in every location.
-This is used for inserting elements into the stash and finding
-elements that were inserted.
-Of course, a more efficient ORAM could be used to implement the stash,
-for instance the square-root ORAM could be used recursively.
+The most basic ORAM scheme is to store all $m$ elements in an array,
+access every element of the array, and keep the desired element.
+This is clearly inefficient.
+However, this is useful for smaller arrays.
+
+In the ORAM scheme presented in this paper, Linear ORAM
+is used to store a $\omega(\sqrt{m})$ sized stash.
 
 For the stash application, this may be slightly optimized compared to the 
 general case since the type of access (read vs write) can be public.

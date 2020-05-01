@@ -3,11 +3,11 @@
 Oblivious RAM (ORAM) is a technique by which
 a client can access a virtual memory of size $m$,
 by accessing some physical memory 
-in such a way that the physical memory accesses
+in such a way that the physical memory accesses reveal
 nothing about the virtual memory accesses.
 This is often understood in a setting in which a client
 outsources encrypted data to a server.
-While encrypting the data hides the content of the data
+While encrypting the data hides the content of the data,
 the client's access patterns may leak sensitive information.
 Another setting in which ORAM is especially useful
 is in secure multi-party computation (MPC).
@@ -49,7 +49,8 @@ that out-performs the then-optimal Circuit ORAM \cite{wang2015circuit}
 for certain useful ranges of $m$.
 Zahur et al. observed that evaluating multiple 
 oblivious pseudo-random functions (OPRFs)
-during the shuffle step was a significant bottleneck in the original ORAM scheme.
+during the shuffle step was a significant bottleneck in the original 
+square-root ORAM scheme.
 While, in theory each OPRF evaluation is constant cost, the constant is high.
 Zahur et al. managed to avoid this by using a recursive table look-up.
 
@@ -60,11 +61,11 @@ and evaluate these using a Feistel Cipher, which in turn
 uses OPRFs, but does not need to evaluate them on as many 
 inputs as the original square-root ORAM protocol.
 
-Unfortunately, the security of the OPRP requires shuffling to occur
-more frequently than once every $\mathcal{O}(\sqrt{m})$ accesses,
-leading to a scheme that has complexity $\mathcal{O}(m^{\frac{5}{8}})$.
+Unfortunately, the security of the Feistel Cipher OPRP requires shuffling to occur
+once every $o(\sqrt{m})$ accesses,
+leading to a scheme that has complexity $\omega(m^{\frac{1}{2}})$.
 Additionally, the appropriate parameters to ensure concrete security
-for Feistel Ciphers is not well understood.
+for Feistel Ciphers are not well understood.
 Improving the understanding of the security of this type of construction
 as well as methods for avoiding the $\mathcal{O}(\sqrt{m})$ bound
 remain as future work.

@@ -27,18 +27,18 @@ SqrtORAM.shuffle does not leak any information
 \begin{proof}
 We have that OblivSort leaks no information if the indexes sorted on
 follow a public distribution. In the case of the first call
-to OblivSort on line \ref{line:first_sort}, this is true
+to OblivSort on line \ref{line:first_sort}, this is true since
 the array $ind$ contains exactly one occurrence of $(x, y)$ 
 for all $x, y \in [\sqrt{n}]$.
 
-The evaluation of the prf on line \ref{line:prf_eval} is performed
+The evaluation of the PRF on line \ref{line:prf_eval} is performed
 within the secure computation with the output being a secret value.
 Therefore nothing is learned about the input in this step.
 
-Viewed as a function $C_k(i)$ is invertible and, since the domain and range
-are equal, $C_k(i)$ is a permutation. 
+Viewed as a function $B_k(i)$ is invertible and, since the domain and range
+are equal, $B_k(i)$ is a permutation. 
 Since it has every possible input, it also has every possible output.
-Therefore the distribution of $C_k(i)$ is public (though its order is secret.)
+Therefore the distribution of $B_k(i)$ is public (though its order is secret.)
 Therefore, when OblivSort is evaluated on line \ref{line:second_sort} 
 it leaks nothing.
 
@@ -57,13 +57,13 @@ Patarin showed that a Feistel cipher with 7 rounds is a
 permutation from $[n] \rightarrow [n]$ 
 secure against chosen plaintext attacks,
 provided the adversary can only learn 
-$max\_evals \ll n^{\frac{1}{2} - \epsilon}$ evaluations of the PRP
+$q \ll n^{\frac{1}{2} - \epsilon}$ evaluations of the PRP
 \cite{patarin2003luby}.
 
 We have already demonstrated that no information, including no
 evaluations of the PRP, is leaked in the SqrtORAM.shuffle.
 Therefore, the only evaluations of the PRP that the adversary may
-learn is the $max\_evals$ evaluations of the PRP.
+learn is the $q$ evaluations of the PRP.
 For a sufficiently small value of $c$ (not the $c$ from the implementation)
 this is therefore secure from Patarin's result.
 

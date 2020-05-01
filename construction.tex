@@ -16,7 +16,7 @@ but has a much smaller cost during the shuffle step.
 \State
 
 \Procedure{SqrtOram.get\_max\_evals}{n}
-\State q = $c \lfloor n^{\frac{1}{2} - EPSILON} \rfloor$
+\State q = $\lfloor c n^{\frac{1}{2} - EPSILON} \rfloor$
 \State \textbf{return} q
 \EndProcedure
 
@@ -26,7 +26,7 @@ but has a much smaller cost during the shuffle step.
 \Comment{$m$ is the size of the array}
 
 \State $n \gets$ smallest $n= 2^{2k}$, such that $n - $ this.get\_max\_evals(n) $ < m$ and $k \in \mathbb{N}$.
-\State $q \gets$ this.\_get\_max\_evals(n)
+\State $q \gets$ this.get\_max\_evals(n)
 
 \For{ $i \gets 1$ to $m$}
    \State $data[i] = data\_orig[i]$
@@ -51,11 +51,11 @@ but has a much smaller cost during the shuffle step.
 
 \State $(ind_0, data_0) = OblivSort(ind, (ind, data))$ \label{line:first_sort}
 
-\State $P = [$ OPRF.init() for $i \gets 1$ to $ROUNDS]$
+\State $F = [$ OPRF.init() for $i \gets 1$ to $ROUNDS]$
 
 \For{ $k \gets 1$ to $ROUNDS$}
     \For{ $j \gets 1$ to $\sqrt{n}$}
-        \State $A_k[j] = P_k.eval(j)$ \label{line:prf_eval}
+        \State $A_k[j] = F_k.eval(j)$ \label{line:prf_eval}
         \For{$i \gets 1$ to $\sqrt{n}$}
             \State $B_k[\sqrt{n} i + j] = (j, i + A_k[j] \bmod \sqrt{n})$
         \EndFor
@@ -68,7 +68,7 @@ but has a much smaller cost during the shuffle step.
 
 \State $stash \gets LinearORAM.init(\sqrt{n})$
 
-\State $oprp \gets OPRP.init(n, P)$
+\State $oprp \gets OPRP.init(n, F)$
 
 \State $count = 0$
 
@@ -123,7 +123,7 @@ The construction follows the original square-root ORAM construction
 \cite{ostrovsky1997private} in general. 
 However it has a much more efficient shuffling step.
 
-The original ORAM construction stores each item element $i$
+The original ORAM construction stores each item $i$
 in a secret location, $OPRF_k(i)$, in a table where
 the key, $k$, for the PRF is secret and the PRF is evaluated obliviously.
 In order to avoid leakage from accessing the same element twice,
@@ -149,11 +149,11 @@ To perform the psuedo-random permutation on every element,
 $ROUNDS$ permutations, $B_1 \ldots B_{ROUNDS}$ are applied in turn.
 The payload is always kept secret, 
 but in each iteration the indexes are shuffled, revealed and sorted.
-To apply $B_k$, the corresponding OPRF, $P_k$ is applied to every possible string
+To apply $B_k$, the corresponding OPRF, $F_k$ is applied to every possible string
 in $[\sqrt{n}]$. 
-Then $(L_k, R_k) = (R_{k-1}, L_{k-1} + P_k(R_{k-1}) \bmod \sqrt{n})$ can 
+Then $(L_k, R_k) = (R_{k-1}, L_{k-1} + F_k(R_{k-1}) \bmod \sqrt{n})$ can 
 be evaluated for every $(L_{k-1}, R_{k-1}) \in [\sqrt{n}] \times [\sqrt{n}]$.
-Observe that the OPRF $P_k$ need only be evaluated on each value of
+Observe that the OPRF $F_k$ need only be evaluated on each value of
 $R_{k-1}$ once, so need only be evaluated $\sqrt{n}$ times.
 Therefore to perform $ROUNDS$ permutations, a total of $ROUNDS \sqrt{n}$ OPRF
 evaluations are needed.

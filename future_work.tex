@@ -9,8 +9,8 @@ and only provided asymptotic security guarantees when the number
 of queries was  $o(\sqrt{n})$, which meant that
 the asymptotic cost per access needed to be $\omega(\sqrt{n})$.
 
-As such, finding an efficient PRP with concrete security for $\mathcal{O}(\sqrt{n})$
-evaluations would be of great use.
+As such, finding an efficient $\mathcal{O}(\sqrt{N})$-wise secure PRP
+would be of great use.
 A number of possible future directions could be explored to address this problem.
 
 \begin{itemize}
@@ -21,20 +21,20 @@ For instance, the bound of $\mathcal{O}(\sqrt{n})$ queries can be broken
 in the case of a fully unbalanced Feistel cipher, where instead
 of half of the bits in each round contributing to the PRF, 
 all but one of the bits do \cite{morris2009encipher}.
-Unfortunately, the results of this paper require non-constant number of rounds, 
+Unfortunately, this technique currently requires a non-constant number of rounds, 
 namely $\mathcal{O}(\log{n})$.
 
 \item
-There has been some work into sampling from $k$-wise almost independent permutations.
+There has been some work into sampling from $q$-wise almost independent permutations.
 For instance, Kaplan et al. \cite{kaplan2009derandomized} show how to 
 \emph{represent} a random permutation from a set of $k$-wise 
 $\delta$-close-to-indendent
-permutaions on $n$ using memory $\mathcal{O}(k\log{(n)} + \log(\frac{1}{\delta}))$.
+permutaions on $n$ using memory $\mathcal{O}(q\log{(n)} + \log(\frac{1}{\delta}))$.
 It is not clear, though, how efficiently such a permuation could be evaluated
 on a single element, or how efficiently an array could be sorted on such a 
 permutation.
-This result was for obtained for space-bounded adversaries,
-it is again not clear whether the scheme could be more efficient
+This result was obtained for space-bounded adversaries,
+it is possible the scheme could be more efficient
 against a computationally-bounded adversary.
 
 \item 
@@ -44,8 +44,8 @@ computation.
 For instance, a shuffle in the (3, 1) security setting can be 
 efficiently performed by secret-sharing the data between each pair
 of parties, in turn, and each pair of parties performing the shuffle.
-However, it is not clear how to evaluate the permutation on any
-specific point without doing an oblivious computation.
+However, it is not clear how to effciently and securely evaluate 
+the permutation on any specific point.
 
 \item
 Another avenue that could be explored is causing the client
@@ -88,7 +88,8 @@ a more efficient shuffling scheme can be used in the shuffle-then-sort protocol.
 Namely, the data can be secret shared between a pair of parties,
 who can locally shuffle the array according to a secret they decide together.
 If each pair of parties does this, an unknown random shuffle is performed.
-This requires 3 resharings of $n$ elements, rather than 3$\frac{n}{2} (2\log(n) - 1)$ evaluations of gates in a Benes network.
+This requires 3 resharings of $n$ elements, rather than 3$(n\log(n) - \frac{n}{2})$
+ evaluations of gates in a Bene\v{s} network.
 
 \item
 ORAM schemes typically make use of the data being stored in ``blocks''.
