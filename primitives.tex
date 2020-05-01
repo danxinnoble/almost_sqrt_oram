@@ -4,7 +4,7 @@
 In this section we describe a number of existing primitives which are
 used in our ORAM construction.
 
-\subsection{Oblivious Pseudo-random function}
+\subsection{Oblivious Pseudo-Random Function}
 
 A Pseudo-Random Function (PRF) is a keyed function such that
 any party possessing the key may easily compute the function,
@@ -61,23 +61,46 @@ is modular they can easily be substituted in.
 \end{algorithm}
 
 
-\subsection{Feistel Cipher}
+\subsection{Oblivious Pseudo-Random Permutation}
 
-The Feistel Cipher allows any PRF $F : [m] \rightarrow[m]$ to be transformed
-into a PRP $G : [m] \times [m] \rightarrow [m] \times [m]$. The technique is as follows.
+A pseudo-random permutation (PRP) is a keyed permutation
+that an adversary cannot distinguish from a random permutation.
+A $k$-wise psuedo-random permutation is a PRP which is secure against
+any adversary that can learn at most $k$ evaluations of the PRP.
+On oblivious pseudo-random permutation (OPRP) is a MPC protocol
+that evaluates a PRP using secret data.
 
+For our application we want an OPRP that is $\sqrt{n}$-wise pseudo-random
+on a small domain $[1 \ldots n]$. 
+Unfortunately, we were not able to find such an OPRP, but we were able
+to find something with almost this functionality.
+
+A Feistel Cipher is a technique for constructing a PRP from a PRF.
+Namely, a PRF $F : [m] \rightarrow[m]$ can be transformed
+into a PRP $G : [m] \times [m] \rightarrow [m] \times [m]$. 
+The technique involves multiple rounds of evaluation of the following function.
 Let $i = (L, R)$, where $i \in [m] \times [m]$ and $L, R \in [m]$.
-Let $B_k(i) = (R, L + F_k(R))$.
-$B_k$ is clearly invertible and maps $[m] \times [m]$ to $[m] \times [m]$, 
+Let $B_j(i) = (R, L + F_j(R))$, where $F_j$ is a OPRF.
+$B_j$ is invertible and maps $[m] \times [m]$ to $[m] \times [m]$, 
 so is a permutation.
 However, it is clearly not pseudo-random, since the last element of $i$ 
-completely reveals the first element of $B_k(i)$.
-Nevertheless, it turns out that if this process is repeated three times,
-using three independently chosen keys, the composition is pseudo-random,
-i.e. $G_{k_1, k_2, k_3} \defined B_{k_3} \circ B_{k_2} \circ B_{k_1}$ is a PRP
-\cite{luby1988construct}.
+completely reveals the first element of $B_j(i)$.
+Nevertheless, for a larger number of rounds, this is $k$-wise 
+pseudorandom for certain values of $k$.
 
-This is described as an algorithm in the following figure,
+The original paper that presented the Feistel cipher \cite{luby1988construct}
+proved that 3 rounds were sufficient to provide statistical pseudo-randomness
+for $k \ll n^{\frac{1}{4}}$.
+Subsequent works examined the security for larger numbers of rounds.
+Patarin showed that, for any $\epsilon > 0$,
+seven rounds are sufficient to provide statistical pseudo-randomness for 
+$k \leq c n^{\frac{1}{2} - \epsilon})$ for some constant $c$ 
+\cite{patarin2003luby}.
+Unfortunately, it is not clear what the concrete advantage of the
+adversary is for a given $n$, $c$ and $\epsilon$.
+We chose to keep $ROUNDS=7$ and to set $c=1$ and $\epsilon = \frac{1}{4}$.
+
+This protocol is described as an algorithm in the following figure,
 where the PRF is treated in a black-box manner.
 
 \begin{algorithm}
@@ -85,7 +108,7 @@ where the PRF is treated in a black-box manner.
 \label{alg:oprp}
 \begin{algorithmic}[1]
 
-\Procedure{OPRP.init}{n, $F_1$, $F_2$, $F_3$}
+\Procedure{OPRP.init}{n, $OPRFs$}  \Comment{OPRFs contains ROUNDS OPRFs}
 \State \textbf{return} self   \Comment{Remember initialization variables}
 \EndProcedure
 
@@ -95,9 +118,9 @@ where the PRF is treated in a black-box manner.
 \State $L_0 \gets x \bmod \sqrt{n}$
 \State $R_0 \gets \lfloor \frac{x}{\sqrt{n}} \rfloor$
 
-\For{$i \gets 1$ to $3$}
+\For{$i \gets 1$ to $ROUNDS$}
 \State $L_i \gets R_{i-1}$
-\State $R_i \gets L_{i-1} + F_{i}.eval(R_{i-1}) \bmod \sqrt{n}$
+\State $R_i \gets L_{i-1} + OPRFs_{i}.eval(R_{i-1}) \bmod \sqrt{n}$
 \EndFor
 
 \State $res \gets L_3\sqrt{n} + R_3$
