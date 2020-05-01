@@ -17,12 +17,12 @@ and output are all secret-shared among a number of parties.
 
 For this application it is in fact sufficient to use the simplest possible
 OPRF, namely a look-up table on random values.
-While this costs $\sqrt{n}$ secure-comparisons and 
-$\sqrt{n}$ muxes per OPRF evaluation,
-each ORAM access will only require $3$ such evaluations,
-and each ORAM shuffle will only require $3 \sqrt{n}$ such evaluations.
-This therefore does not affect the asymptotic performance
-of the protocol, and the constants are small.
+This is somewhat inefficient in that it requires generating and storing 
+$\sqrt{n}$ random $\frac{\log{n}}{2}$-bit secret-shared numbers
+and costs $\sqrt{n}$ secure-comparisons and 
+$\sqrt{n}$ muxes to be evaluated on a \emph{secret} input.
+However, it has the benefit that it can be evaluted on a
+\emph{public} input at constant cost.
 
 Of course, other OPRFs may be more efficient and since the design
 is modular they can easily be substituted in.
@@ -37,6 +37,12 @@ is modular they can easily be substituted in.
     \State $table[i] \gets^r [size]$
 \EndFor
 \State \textbf{return} self
+\EndProcedure
+
+\State
+
+\Procedure{OPRF.eval\_pub}{x} \Comment{Input is public, output is secret.}
+\State \textbf{return} table[x]
 \EndProcedure
 
 \State
@@ -82,6 +88,8 @@ where the PRF is treated in a black-box manner.
 \Procedure{OPRP.init}{n, $F_1$, $F_2$, $F_3$}
 \State \textbf{return} self   \Comment{Remember initialization variables}
 \EndProcedure
+
+\State
 
 \Procedure{OPRP.eval}{x}
 \State $L_0 \gets x \bmod \sqrt{n}$

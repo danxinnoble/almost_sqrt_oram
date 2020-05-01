@@ -5,7 +5,7 @@ oblivious-RAM with amortized cost $O(\sqrt{n} \log{n})$.
 
 In the secure-computation setting, a direct application of this
 protocol would require many evaluations of an oblivious PRF (OPRF).
-While in principle this is a constant-cost operation, in practice evaluating an OPRF is expensive. For instance, in the sem-honest, 2-party setting, the communication cost of oblivious versions of standard PRFs is around 170 Kb and around 20 Kb for MPC-optimized PRFs (\cite{hemenway2019private} Table 1) % This should be updated to reference the actual papers and use more recent results.
+While in principle this is a constant-cost operation, in practice evaluating an OPRF is expensive. For instance, in the semi-honest, 2-party setting, the communication cost of oblivious versions of standard PRFs is around 170 Kb and around 20 Kb for MPC-optimized PRFs (\cite{hemenway2019private} Table 1) % This should be updated to reference the actual papers and use more recent results.
 
 A different approach to square-root ORAM was therefore explored by Zahur et al is to use a recursive solution to store a look-up table for the evaluations of the PRF.
 
@@ -14,7 +14,7 @@ However we take advantage of a number of facts to make the OPRFs more efficient.
 Firstly, each PRF will only be evaluated on $\sqrt{n}$ elements.
 Therefore, the PRF does not need to be secure up to an arbitrary number of 
 evaluations. In deed, it can be rendered completely insecure if evaluated
-on $\sqrt(n) + 1$ points and still be secure for our purposes.
+on $\sqrt{n} + 1$ points and still be secure for our purposes.
 Secondly the PRF is evaluated over a small input.
 Thirdly, if the PRF is, in fact, a permutation and 
 if the function is evaluated for \emph{every} point in the range,

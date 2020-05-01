@@ -1,0 +1,24 @@
+\section{Results}
+
+Tests were conducted on an Inspiron 15 7000, with 3 parties
+running locally in a Ubuntu 16.04.
+The fact that the programs ran on a single machine impacts
+the running time of the program, (since there is no latency,
+but at the same time there is increased compuation demand).
+We therefore only report on total communication cost
+since this should be approximately uniform accross testing
+environments. 
+\footnote{Running programs on a single machine means there
+is no packet loss. Therefore it can be expected to have
+slightly improved communication cost relative to running
+the protocol in a real network, but this affect should be small.}
+
+SCALE-MAMBA prepares pre-processing data in batches.
+Therefore, if a program is small, and does not use 
+an entire batch, it will have much higher communication cost
+than if it were run as part of a larger computation.
+To compensate for this, we ran smaller tests multiple times and 
+found the average cost per execution.
+
+
+

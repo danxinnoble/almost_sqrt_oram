@@ -1,0 +1,25 @@
+\section{Implementation}
+
+The MPC-ORAM protocol described above was implemented in 
+SCALE-MAMBA \footnote{https://github.com/KULeuven-COSIC/SCALE-MAMBA}, 
+a secure multiparty framework based on the SPDZ protocol 
+\cite{damgaard2012multiparty}
+and a series of continued developments \cite{damgaard2013practical,
+keller2018overdrive, aly2019zaphod}.
+This framework allows for secure computation with any number of parties
+and is secure against malicious adversaries.
+While most of the system is secure in the full-threshold case,
+this requires a key generation setup which has not yet been 
+included in the release (though has been implemented \cite{rotaruactively}). 
+As such, we used the honest majority security setting.
+
+The protocol was implemented essentially as described in the design.
+One limitation is that recursion is challenging to implement in
+SCALE-MAMBA. Therefore, random shuffling was performed using
+a Bene\v{s} permutation network \cite{benevs1964permutation}  
+which requires $n \log_2(n) - \frac{n}{2}$ gates
+rather than the slightly improved Waksman network
+\cite{waksman1968permutation} 
+which requires $n \log_2(n) - n + 1$ gates.
+
+
