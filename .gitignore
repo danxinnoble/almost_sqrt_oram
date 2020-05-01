@@ -4,3 +4,5 @@
 *.bbl
 *.blg
 *.pyc
+*.md5
+*.auxlock
