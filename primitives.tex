@@ -85,7 +85,7 @@ these solutions are not very efficient.
 
 One approach to this problem is to use a Feistel Cipher.
 A Feistel Cipher is a technique for constructing a PRP from a PRF.
-Namely, a PRF $F \cross \mathcal{K} : [\prfSize] \rightarrow[\prfSize]$ 
+Namely, a PRF $F \times \mathcal{K} : [\prfSize] \rightarrow [\prfSize]$ 
 can be transformed into a PRP 
 $G : [\prfSize] \times [\prfSize] \times \mathcal{K} \rightarrow [\prfSize] \times [\prfSize]$. 
 In our case we set $\prfSize = \sqrt{n}$ to construct a PRP on 
